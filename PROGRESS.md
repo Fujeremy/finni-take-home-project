@@ -18,6 +18,7 @@ Developer-requested polish after the milestones, each proposed and approved befo
 |---|---|---|
 | 50-patient mock dataset with `db:seed` and `db:reset` | `dev/mock-patients` | **Complete** — merged in Fujeremy/finni-take-home-project#10 |
 | Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | Committed locally (6 commits), not pushed, awaiting review |
+| `npm start` runs the production build, with Express serving the built client | `polish/production-start` (stacked on `fix/request-errors`) | Committed locally (3 commits), not pushed, awaiting review |
 
 ## Implemented
 
@@ -25,14 +26,16 @@ Developer-requested polish after the milestones, each proposed and approved befo
 - **Shared:** `createPatientSchema` with every field rule from PLAN.md §6, and the `Patient` response type built from it.
 - **Client:** patient directory (loading, error with Retry, a Retry banner above the last loaded list when a later refresh fails, empty state pointing to the header button, and a table with name, birth date, status badge, full address, and added time). Add patient dialog: grouped fields, validation when a field is left and on Save, reserved space for errors, server field errors beside fields, values kept on failure, saving state, discard confirmation, toast naming the patient, and focus returned to Add patient.
 - **Mock data:** 50 fictional patients (`server/src/db/mockPatients.ts`) covering length limits, accents and non-Latin scripts, optional fields present and absent, birth-date bounds, and Canadian and US postal formats. `npm run db:seed` replaces every patient in the development database with them; `npm run db:reset` empties it.
-- **Docs:** final README per PLAN.md §11, verified from a fresh clone (C2), with seeding and resetting documented.
+- **Production start:** `npm start` builds every workspace, then runs the compiled API, which also serves `client/dist` when it exists. The page and API share http://localhost:3001; development still uses Vite on 5173.
+- **Docs:** final README per PLAN.md §11, verified from a fresh clone (C2), with seeding, resetting, and `npm start` documented.
 
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
-- **Current totals (2026-10-20, `fix/request-errors`):** 45 shared, 31 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
+- **Current totals (2026-10-20, `polish/production-start`):** 45 shared, 33 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
 - **Request errors:** each new server test was seen failing before its fix. With curl against the running API: `GET /api/nope` → 404 JSON, `[]` → 400 `INVALID_JSON`, `text/plain` → 415, a 200 KB body → 413, and a POST with no body still lists each missing field.
 - **Stale directory:** in the browser at 1440px with the 50 mock patients, stopping the API and returning to the tab kept all 50 rows and showed the refresh banner with Retry.
+- **Production start:** `npm start` built everything and served the page (200 HTML), the patient list, and the JSON 404 from port 3001. In the browser at that address, adding a patient showed the toast and put the patient first in the table.
 - **Mock dataset:** all 50 records pass the shared schema; every address is in Canada or the US; every text field hits its limit; `db:seed` and `db:reset` were run through npm against the test database (50 patients, then 50 again, then 0).
 - **C1:** the production build splits into a 332 KB main file (105 KB gzipped) and a 231 KB dialog file, with no size warning. In the browser, the page loads the main file first and the dialog file right after; the first open takes about 44ms. Loading the dialog only on first open was tried and rejected: React's Suspense reveal made that first open take about 334ms.
 - **Screen reader:** the developer reviewed the app with a screen reader (2026-10-20) and found nothing to fix.
@@ -81,4 +84,4 @@ Found in a pre-submission review (2026-10-20); each needs a developer decision b
 
 ## Next step
 
-Developer review of `fix/request-errors`, then approval to push and open its PR. Then a production `npm start` that serves the built client from Express (approved, not started).
+Developer review of `fix/request-errors` and `polish/production-start`, then approval to push them and open their PRs.
