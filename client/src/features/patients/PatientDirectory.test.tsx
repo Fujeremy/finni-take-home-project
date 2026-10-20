@@ -107,8 +107,9 @@ describe("PatientDirectory", () => {
     renderDirectory();
     const shortenedAddress = await screen.findByText("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
 
-    // The search box and Status button come first in the tab order, then the shortened name,
-    // then the shortened address.
+    // The search box, Status button, and Sort button come first in the tab order, then the
+    // shortened name, then the shortened address.
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -125,8 +126,9 @@ describe("PatientDirectory", () => {
     const fullName = await screen.findByText("Jordan Lee Rivera");
 
     await user.hover(fullName);
-    // The search box and Status button are the only Tab stops; the next Tab passes over the
-    // table to the page.
+    // The search box, Status button, and Sort button are the only Tab stops; the next Tab
+    // passes over the table to the page.
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -455,6 +457,91 @@ describe("PatientDirectory", () => {
       expect(screen.getByRole("region", { name: "No matching patients" })).toHaveTextContent(
         "No patients have status Churned.",
       );
+    });
+  });
+  describe("sorting", () => {
+    const averyChen: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000002",
+      firstName: "Avery",
+      middleName: null,
+      lastName: "Chen",
+      status: "inquiry",
+    };
+    const samRivers: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000003",
+      firstName: "Sam",
+      middleName: null,
+      lastName: "Rivers",
+      status: "onboarding",
+    };
+    // The API returns newest first: Sam Rivers, then Avery Chen, then Jordan Lee Rivera.
+    const apiOrder = [samRivers, averyChen, savedPatient];
+
+    function patientNamesInTableOrder(): string[] {
+      const [, ...patientRows] = screen.getAllByRole("row");
+      return patientRows.map((row) => within(row).getAllByRole("cell")[0]!.textContent ?? "");
+    }
+
+    it("starts sorted by Recently added, in the order the API returned", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+
+      renderDirectory();
+
+      expect(await screen.findByRole("button", { name: "Sort: Recently added" })).toBeInTheDocument();
+      expect(patientNamesInTableOrder()).toEqual(["Sam Rivers", "Avery Chen", "Jordan Lee Rivera"]);
+    });
+
+    it("reorders the table by last name and names the choice on the button", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+      renderDirectory();
+
+      await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Last name A–Z" }));
+
+      expect(screen.getByRole("button", { name: "Sort: Last name A–Z" })).toBeInTheDocument();
+      expect(patientNamesInTableOrder()).toEqual(["Avery Chen", "Jordan Lee Rivera", "Sam Rivers"]);
+    });
+
+    it("does not show a result count when only the sort is changed", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+      renderDirectory();
+
+      await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Oldest added" }));
+
+      expect(patientNamesInTableOrder()).toEqual(["Jordan Lee Rivera", "Avery Chen", "Sam Rivers"]);
+      expect(screen.queryByText(/^Showing/)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+    });
+
+    it("sorts only the patients that match the search", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Last name Z–A" }));
+
+      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "riv");
+
+      expect(patientNamesInTableOrder()).toEqual(["Sam Rivers", "Jordan Lee Rivera"]);
+    });
+
+    it("keeps the chosen sort after Clear filters", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Last name A–Z" }));
+      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "riv");
+
+      await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+      expect(screen.getByRole("button", { name: "Sort: Last name A–Z" })).toBeInTheDocument();
+      expect(patientNamesInTableOrder()).toEqual(["Avery Chen", "Jordan Lee Rivera", "Sam Rivers"]);
     });
   });
 });

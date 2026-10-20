@@ -8,6 +8,8 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -29,6 +31,7 @@ import {
   PATIENT_STATUS_LABELS,
 } from "./patientFormatting";
 import { matchesNameSearch } from "./patientSearch";
+import { PATIENT_SORT_LABELS, PATIENT_SORT_ORDERS, sortPatients, type PatientSortOrder } from "./patientSorting";
 import { TruncatedText } from "./TruncatedText";
 
 // The statuses in their usual order, taken from the labels rather than importing
@@ -202,13 +205,50 @@ function StatusFilter({ patients, selectedStatuses, onSelectedStatusesChange }: 
   );
 }
 
+type SortMenuProps = {
+  sortOrder: PatientSortOrder;
+  onSortOrderChange: (sortOrder: PatientSortOrder) => void;
+};
+
+function SortMenu({ sortOrder, onSortOrderChange }: SortMenuProps) {
+  // Radix reports the chosen value as a plain string, so map it back to a known sort order.
+  function chooseSortOrder(chosenValue: string) {
+    const chosenSortOrder = PATIENT_SORT_ORDERS.find((knownSortOrder) => knownSortOrder === chosenValue);
+    if (chosenSortOrder) {
+      onSortOrderChange(chosenSortOrder);
+    }
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline">
+          Sort: {PATIENT_SORT_LABELS[sortOrder]}
+          <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+        <DropdownMenuRadioGroup value={sortOrder} onValueChange={chooseSortOrder}>
+          {PATIENT_SORT_ORDERS.map((sortOption) => (
+            <DropdownMenuRadioItem key={sortOption} value={sortOption}>
+              {PATIENT_SORT_LABELS[sortOption]}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 // The filters live here rather than in PatientDirectory so they only exist once there are
 // patients to filter. This component stays mounted while the list refreshes, so a refresh,
-// a failed refresh, or a newly added patient keeps the provider's filters.
+// a failed refresh, or a newly added patient keeps the provider's filters and sort.
 function FilterablePatientList({ patients }: { patients: Patient[] }) {
   const [searchText, setSearchText] = useState("");
   // Empty means every status is shown.
   const [selectedStatuses, setSelectedStatuses] = useState<PatientStatus[]>([]);
+  // Sorting isn't a filter: it doesn't show the result count and Clear filters keeps it.
+  const [sortOrder, setSortOrder] = useState<PatientSortOrder>("recently-added");
   const searchBoxRef = useRef<HTMLInputElement>(null);
 
   const isSearching = searchText.trim() !== "";
@@ -219,6 +259,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
     return matchesStatus && matchesNameSearch(patient, searchText);
   });
   const hasMatches = matchingPatients.length > 0;
+  const sortedMatchingPatients = sortPatients(matchingPatients, sortOrder);
 
   function clearFilters() {
     setSearchText("");
@@ -251,6 +292,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
             selectedStatuses={selectedStatuses}
             onSelectedStatusesChange={setSelectedStatuses}
           />
+          <SortMenu sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {/* Always rendered so screen readers announce the count as it changes. */}
@@ -266,7 +308,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
         </div>
       </div>
       {hasMatches ? (
-        <PatientTable patients={matchingPatients} />
+        <PatientTable patients={sortedMatchingPatients} />
       ) : (
         <NoMatchingPatients message={describeNoMatches(searchText, selectedStatuses)} onClearFilters={clearFilters} />
       )}
