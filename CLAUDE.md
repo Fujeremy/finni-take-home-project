@@ -41,8 +41,16 @@ For a new feature or structural change, propose the approach, files, and tests, 
 Include the intended test scenarios in plain language in the proposal so coverage can be reviewed before writing code. Focus on the behaviors in `PLAN.md` §9; add §10 coverage only when implementing those optional enhancements.
 
 ## Implementation scope and workflow
-- Implement one logical feature or vertical slice at a time. Keep changes focused and independently reviewable.
-- Avoid unrelated features, refactoring, or restructuring. Break substantial changes into smaller checkpoints when appropriate.
+- Implement one logical feature or vertical slice at a time. Avoid unrelated features, refactoring, or restructuring.
+- Keep each commit and PR digestible: a reviewer should be able to understand and verify it in one pass.
+  - One purpose per commit, describable in a single sentence without "and".
+  - Separate mechanical changes (scaffolding, generated files, dependency installs, renames, formatting) from logic changes.
+  - Introduce at most one or two new concepts (a contract, layer, or pattern) per commit.
+  - Each commit leaves the app building and runnable, and includes the tests for the behavior it adds.
+  - Every changed file must serve the stated purpose; no drive-by edits.
+- Every implementation proposal lists the planned commits, each with its purpose and main files. Split slices that fail these criteria before writing code.
+- If work grows beyond its planned purpose, stop at a stable point and propose a split instead of continuing.
+- Before any handoff, commit request, or PR proposal, show `git diff --stat` and confirm the change meets these criteria. Explain any large or wide diff, or propose a split.
 - For backend behavior, start with a failing behavior/API test where useful (red → green → refactor). For UI, test meaningful interactions rather than styling details.
 - Follow existing conventions and implement the smallest solution that meets the agreed behavior.
 - Complete the applicable checks in `PLAN.md` §9 before handoff.

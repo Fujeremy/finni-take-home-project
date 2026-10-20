@@ -1,0 +1,21 @@
+{
+  "name": "@finni/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "knex": "tsx ../node_modules/knex/bin/cli.js",
+    "db:migrate": "npm run knex -- migrate:latest"
+  },
+  "dependencies": {
+    "@finni/shared": "*",
+    "knex": "^3.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}
