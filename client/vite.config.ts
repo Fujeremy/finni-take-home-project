@@ -10,4 +10,10 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "src"),
     },
   },
+  server: {
+    // Forwards API calls to Express, which listens on PORT from .env.example.
+    proxy: {
+      "/api": "http://localhost:3001",
+    },
+  },
 });
