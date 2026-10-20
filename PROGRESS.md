@@ -15,7 +15,7 @@
 | B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
 | B2 | `core/patients-api` | `GET` and `POST /api/patients` | Merged (Fujeremy/finni-take-home-project#5) |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Merged (Fujeremy/finni-take-home-project#6) |
-| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7); 7 commits on GitHub plus 5 local, awaiting review |
+| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7); 7 commits on GitHub plus 6 local, awaiting review |
 
 ## Implemented (Milestone B so far)
 
@@ -85,6 +85,7 @@ Not yet verified: a real screen reader (labels, descriptions, and roles were che
 - Fields are validated when the provider leaves them (`onTouched`), then live as they are corrected; Save checks every field.
 - Each field reserves one line for its error so errors don't shift the form; length messages read "100 characters max." so every error fits on one line.
 - Opening the dialog focuses the dialog itself, not First name; the first Tab reaches First name.
+- Invalid fields show a half-strength red border with no glow; the red glow appears only while the field has keyboard focus.
 - `@hookform/resolvers` is pinned to 5.2 because 6.x lists optional peers npm cannot resolve together.
 - Light theme only (KNOWN_LIMITATIONS.md); the Sonner component is edited to drop next-themes.
 - The empty state points to the header's Add patient button instead of repeating it (PLAN.md §4 updated).

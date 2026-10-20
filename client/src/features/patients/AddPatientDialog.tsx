@@ -53,6 +53,11 @@ const EMPTY_PATIENT_FORM: CreatePatientInput = {
   country: "",
 };
 
+// Softer than the generated style: a half-strength red border with no glow, plus the
+// glow only while focused so keyboard users can still see which field they're in.
+const SOFT_INVALID_OUTLINE =
+  "aria-invalid:border-destructive/50 aria-invalid:ring-0 aria-invalid:focus-visible:ring-3 aria-invalid:focus-visible:ring-destructive/20";
+
 // Always takes one line of space, so an error appearing doesn't push the fields below it down.
 // Pulled up slightly so the error sits close to its own field rather than the next one.
 function ReservedFieldError({ id, error }: { id: string; error: { message?: string } | undefined }) {
@@ -97,6 +102,7 @@ function PatientTextField({ name, label, optional = false, hint, type = "text", 
       </FieldLabel>
       <Input
         id={inputId}
+        className={SOFT_INVALID_OUTLINE}
         type={type}
         min={min}
         max={max}
@@ -125,7 +131,7 @@ function PatientStatusField() {
               id="patient-status"
               ref={field.ref}
               onBlur={field.onBlur}
-              className="w-full"
+              className={`w-full ${SOFT_INVALID_OUTLINE}`}
               aria-invalid={Boolean(fieldState.error)}
               aria-describedby={fieldState.error ? "patient-status-error" : undefined}
             >
