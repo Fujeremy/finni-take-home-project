@@ -15,7 +15,7 @@
 | B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
 | B2 | `core/patients-api` | `GET` and `POST /api/patients` | Merged (Fujeremy/finni-take-home-project#5) |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Merged (Fujeremy/finni-take-home-project#6) |
-| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7); 7 commits on GitHub plus 3 local, awaiting review |
+| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7); 7 commits on GitHub plus 5 local, awaiting review |
 
 ## Implemented (Milestone B so far)
 
@@ -68,7 +68,7 @@ B4 (2026-10-20, each commit in its own state):
 - With `dev:shared` and `dev:client` running, a changed shared message appeared in the form without a restart.
 - Test patients were deleted afterward.
 - Validation on leaving a field: switching back to checking only on Save makes the two leave-the-field tests fail.
-- Reserved error space: in the browser, all eight required errors appearing moved no field and left the form height unchanged. A length message that wraps to two lines in a narrow column still shifts the form by one line.
+- Reserved error space: in the browser, all eight required errors plus a length error appearing moved no field and left the form height unchanged (760px). Errors sit 4px under their input and 8px above the next label.
 - Opening focus: removing the dialog-focus override makes the three focus tests fail, including the one where starting in another field must not flag First name.
 
 Not yet verified: a real screen reader (labels, descriptions, and roles were checked in tests and the browser only).
@@ -83,7 +83,7 @@ Not yet verified: a real screen reader (labels, descriptions, and roles were che
 - Form layout groups short fields side by side; region is labelled "Province or state"; the toast names the patient.
 - Inputs have no maxLength: over-limit text is kept and flagged rather than silently cut off.
 - Fields are validated when the provider leaves them (`onTouched`), then live as they are corrected; Save checks every field.
-- Each field reserves one line for its error so errors don't shift the form.
+- Each field reserves one line for its error so errors don't shift the form; length messages read "100 characters max." so every error fits on one line.
 - Opening the dialog focuses the dialog itself, not First name; the first Tab reaches First name.
 - `@hookform/resolvers` is pinned to 5.2 because 6.x lists optional peers npm cannot resolve together.
 - Light theme only (KNOWN_LIMITATIONS.md); the Sonner component is edited to drop next-themes.

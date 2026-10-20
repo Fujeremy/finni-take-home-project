@@ -54,9 +54,10 @@ const EMPTY_PATIENT_FORM: CreatePatientInput = {
 };
 
 // Always takes one line of space, so an error appearing doesn't push the fields below it down.
+// Pulled up slightly so the error sits close to its own field rather than the next one.
 function ReservedFieldError({ id, error }: { id: string; error: { message?: string } | undefined }) {
   return (
-    <div className="min-h-5">
+    <div className="-mt-1 min-h-5">
       <FieldError id={id} errors={[error]} />
     </div>
   );
@@ -266,18 +267,18 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
             onSubmit={form.handleSubmit(savePatient)}
             className="space-y-6"
           >
-            <FieldSet disabled={isSaving}>
+            <FieldSet disabled={isSaving} className="gap-2">
               <FieldLegend>Name</FieldLegend>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-x-4 gap-y-2">
                 <PatientTextField name="firstName" label="First name" />
                 <PatientTextField name="middleName" label="Middle name" optional />
                 <PatientTextField name="lastName" label="Last name" />
               </div>
             </FieldSet>
 
-            <FieldSet disabled={isSaving}>
+            <FieldSet disabled={isSaving} className="gap-2">
               <FieldLegend>Patient details</FieldLegend>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <PatientTextField
                   name="dateOfBirth"
                   label="Date of birth"
@@ -289,15 +290,15 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
               </div>
             </FieldSet>
 
-            <FieldSet disabled={isSaving}>
+            <FieldSet disabled={isSaving} className="gap-2">
               <FieldLegend>Address</FieldLegend>
               <PatientTextField name="addressLine1" label="Address line 1" />
               <PatientTextField name="addressLine2" label="Address line 2" optional />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <PatientTextField name="city" label="City" />
                 <PatientTextField name="region" label="Province or state" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                 <PatientTextField name="postalCode" label="Postal code" />
                 <PatientTextField name="country" label="Country code" hint="Two letters, e.g. CA" />
               </div>
