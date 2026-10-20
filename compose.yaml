@@ -1,0 +1,22 @@
+# Local development database only. Credentials are for fictional data on a
+# developer machine and must not be reused anywhere else.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: finni
+      POSTGRES_PASSWORD: finni
+      POSTGRES_DB: finni_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finni -d finni_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  db-data:
