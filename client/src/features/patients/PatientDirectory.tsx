@@ -1,7 +1,10 @@
 import type { Patient, PatientStatus } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
+import { SearchIcon } from "lucide-react";
+import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -19,6 +22,7 @@ import {
   formatPatientName,
   PATIENT_STATUS_LABELS,
 } from "./patientFormatting";
+import { matchesNameSearch } from "./patientSearch";
 import { TruncatedText } from "./TruncatedText";
 
 // Color supports the text label; it is never the only way to tell statuses apart.
@@ -84,6 +88,77 @@ function EmptyDirectory() {
   );
 }
 
+function NoMatchingPatients({ searchText, onClearFilters }: { searchText: string; onClearFilters: () => void }) {
+  return (
+    <section aria-labelledby="no-matching-patients-heading" className="space-y-3 rounded-lg border p-8 text-center">
+      <h2 id="no-matching-patients-heading" className="text-lg font-medium">
+        No matching patients
+      </h2>
+      <p className="text-muted-foreground wrap-anywhere">No patient names match “{searchText.trim()}”.</p>
+      <Button variant="outline" onClick={onClearFilters}>
+        Clear filters
+      </Button>
+    </section>
+  );
+}
+
+// The search lives here rather than in PatientDirectory so it only exists once there are
+// patients to search. This component stays mounted while the list refreshes, so a refresh,
+// a failed refresh, or a newly added patient keeps the provider's search.
+function FilterablePatientList({ patients }: { patients: Patient[] }) {
+  const [searchText, setSearchText] = useState("");
+  const searchBoxRef = useRef<HTMLInputElement>(null);
+
+  const isFiltering = searchText.trim() !== "";
+  const matchingPatients = patients.filter((patient) => matchesNameSearch(patient, searchText));
+  const hasMatches = matchingPatients.length > 0;
+  const totalNoun = patients.length === 1 ? "patient" : "patients";
+
+  function clearFilters() {
+    setSearchText("");
+    searchBoxRef.current?.focus();
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4">
+        <div className="relative w-full max-w-sm">
+          <SearchIcon
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            ref={searchBoxRef}
+            type="search"
+            aria-label="Search patients by name"
+            placeholder="Search by name"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {/* Always rendered so screen readers announce the count as it changes. */}
+          <p role="status" className="tabular-nums">
+            {isFiltering && `Showing ${matchingPatients.length} of ${patients.length} ${totalNoun}`}
+          </p>
+          {/* With no matches, the message below holds the only Clear filters button. */}
+          {isFiltering && hasMatches && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+      </div>
+      {hasMatches ? (
+        <PatientTable patients={matchingPatients} />
+      ) : (
+        <NoMatchingPatients searchText={searchText} onClearFilters={clearFilters} />
+      )}
+    </div>
+  );
+}
+
 export function PatientDirectory() {
   const patientsQuery = useQuery({
     queryKey: ["patients"],
@@ -132,7 +207,7 @@ export function PatientDirectory() {
           </Button>
         </div>
       )}
-      {patients.length === 0 ? <EmptyDirectory /> : <PatientTable patients={patients} />}
+      {patients.length === 0 ? <EmptyDirectory /> : <FilterablePatientList patients={patients} />}
     </div>
   );
 }
