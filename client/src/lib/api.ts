@@ -1,6 +1,4 @@
-export type HealthStatus = {
-  status: "ok";
-};
+import type { Patient } from "@finni/shared";
 
 type ApiErrorBody = {
   error: {
@@ -33,10 +31,10 @@ async function readErrorMessage(response: Response): Promise<string> {
   return UNREACHABLE_MESSAGE;
 }
 
-export async function getHealth(): Promise<HealthStatus> {
+export async function getPatients(): Promise<Patient[]> {
   let response: Response;
   try {
-    response = await fetch("/api/health", { headers: { Accept: "application/json" } });
+    response = await fetch("/api/patients", { headers: { Accept: "application/json" } });
   } catch {
     throw new Error(UNREACHABLE_MESSAGE);
   }
@@ -44,5 +42,5 @@ export async function getHealth(): Promise<HealthStatus> {
   if (!response.ok) {
     throw new Error(await readErrorMessage(response));
   }
-  return (await response.json()) as HealthStatus;
+  return (await response.json()) as Patient[];
 }

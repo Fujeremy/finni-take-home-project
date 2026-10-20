@@ -13,8 +13,8 @@
 | PR | Branch | Scope | State |
 |---|---|---|---|
 | B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
-| B2 | `core/patients-api` | `GET` and `POST /api/patients` | Committed locally (2 commits), not pushed, awaiting review |
-| B3 | `core/directory` | Patient directory table with loading, empty, and error states | Not started |
+| B2 | `core/patients-api` | `GET` and `POST /api/patients` | Merged (Fujeremy/finni-take-home-project#5) |
+| B3 | `core/directory` | Patient directory table with loading, empty, and error states | Committed locally (3 commits), not pushed, awaiting review |
 | B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Not started |
 
 ## Implemented (Milestone B so far)
@@ -23,6 +23,9 @@
 - `npm run dev:shared` rebuilds the shared package on change.
 - `GET /api/patients`: all patients newest first (ties by id), camelCase fields, birth dates as stored `YYYY-MM-DD`, `createdAt` as UTC ISO.
 - `POST /api/patients`: validates with `createPatientSchema`; 201 with the saved patient, 400 `VALIDATION_ERROR` with `fieldErrors`, 400 `INVALID_JSON`.
+- `Patient` response type defined once in shared from the schema; the insert is typed as a full row.
+- Client tests: Vitest with jsdom and Testing Library; tests typechecked by `client/tsconfig.test.json`.
+- Patient directory replaces the connection check: loading, error with Retry, empty state, and a table with name, birth date, status badge, full address, and added time. Both "Add patient" buttons are shown disabled until B4.
 
 ## Implemented (Foundation)
 
@@ -47,7 +50,14 @@ B2 (2026-10-20, each commit in its own state):
 - Manual with curl against the dev server: valid create returned 201 trimmed and uppercased; invalid create returned every field error; list returned the saved patient. The test patient was then deleted from the dev database.
 - With `dev:shared` and `dev:server` running, editing a shared message changed the API's response without a restart, and reverting it changed it back.
 
-Not yet verified: the client reloading on shared changes (the client imports the schema in B4).
+B3 (2026-10-20, each commit in its own state):
+- `npm test`: 45 shared, 20 server, and 8 client tests pass. Switching the display test to Tokyo, or formatting birth dates in local time, makes the timezone tests fail.
+- `npm run typecheck`, `npm run lint`, `npm run build`: passed.
+- Browser with 5 fictional patients (all statuses, optional fields set and blank, maximum-length values): every field shown; long values wrap; no horizontal scrolling at 1280px or 1440px. Empty state shown with an empty database. With the API stopped, the error and Retry appear. Test patients were then deleted.
+
+Not yet verified:
+- A manual Retry click: TanStack Query refetched automatically when the browser pane regained focus, before the click landed. The automated test covers Retry.
+- The client reloading on shared changes (the client imports the schema at runtime in B4).
 
 ## Decisions made
 
@@ -56,6 +66,7 @@ Not yet verified: the client reloading on shared changes (the client imports the
 - Birth dates: 1900-01-01 through today, checked against each side's local date; no timezone header (PLAN.md §6, KNOWN_LIMITATIONS.md).
 - Directory shows an "Added" column; dates display like "Mar 14, 1988".
 - Status uses shadcn's Radix Select; closing the dialog with entered values asks first; closing is blocked while saving.
+- "Add patient" buttons appear disabled in B3 and are enabled with the dialog in B4.
 - TypeScript is pinned to 6.0 because typescript-eslint does not support 7.x yet.
 
 ## Open questions
@@ -64,4 +75,4 @@ Not yet verified: the client reloading on shared changes (the client imports the
 
 ## Next step
 
-Developer review of B2, then approval to push and open it. After that, B3 (`core/directory`): the patient directory table.
+Developer review of B3, then approval to push and open it. After that, B4 (`core/add-patient`): the add patient dialog.
