@@ -12,8 +12,8 @@
 
 | PR | Branch | Scope | State |
 |---|---|---|---|
-| B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Committed locally (6 commits), not pushed, awaiting review |
-| B2 | `core/patients-api` | `GET` and `POST /api/patients` | Not started |
+| B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
+| B2 | `core/patients-api` | `GET` and `POST /api/patients` | Committed locally (2 commits), not pushed, awaiting review |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Not started |
 | B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Not started |
 
@@ -21,6 +21,8 @@
 
 - `createPatientSchema` in `@finni/shared`: trimmed text, required fields, blank optional fields as null, length limits, required status, uppercase two-letter country codes, and birth dates from 1900-01-01 through the local date today. `CreatePatientInput` and `CreatePatientData` types are inferred from it.
 - `npm run dev:shared` rebuilds the shared package on change.
+- `GET /api/patients`: all patients newest first (ties by id), camelCase fields, birth dates as stored `YYYY-MM-DD`, `createdAt` as UTC ISO.
+- `POST /api/patients`: validates with `createPatientSchema`; 201 with the saved patient, 400 `VALIDATION_ERROR` with `fieldErrors`, 400 `INVALID_JSON`.
 
 ## Implemented (Foundation)
 
@@ -39,7 +41,13 @@ B1 (2026-10-20, each commit in its own state):
 - `npm run typecheck`, `npm run lint`, `npm run build`: passed.
 - `npm run dev:shared` rebuilt `shared/dist` after a source edit and after reverting it.
 
-Not yet verified: the API and client reloading on shared changes (nothing imports the schema until B2 and B4).
+B2 (2026-10-20, each commit in its own state):
+- `npm test`: 45 shared and 20 server tests pass (3 list, 11 create). The birth-date test fails without the date setting; the invalid-JSON test fails without its handler.
+- `npm run typecheck`, `npm run lint`, `npm run build`: passed.
+- Manual with curl against the dev server: valid create returned 201 trimmed and uppercased; invalid create returned every field error; list returned the saved patient. The test patient was then deleted from the dev database.
+- With `dev:shared` and `dev:server` running, editing a shared message changed the API's response without a restart, and reverting it changed it back.
+
+Not yet verified: the client reloading on shared changes (the client imports the schema in B4).
 
 ## Decisions made
 
@@ -56,4 +64,4 @@ Not yet verified: the API and client reloading on shared changes (nothing import
 
 ## Next step
 
-Developer review of B1, then approval to push and open it. After that, B2 (`core/patients-api`): `GET` and `POST /api/patients`.
+Developer review of B2, then approval to push and open it. After that, B3 (`core/directory`): the patient directory table.

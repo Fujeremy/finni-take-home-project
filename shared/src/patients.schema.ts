@@ -125,3 +125,10 @@ export type CreatePatientInput = z.input<typeof createPatientSchema>;
 
 // What the schema returns once input is valid: trimmed, with blank optional fields as null.
 export type CreatePatientData = z.output<typeof createPatientSchema>;
+
+// A saved patient as the API returns it: the validated fields plus what the database adds.
+// dateOfBirth stays YYYY-MM-DD and createdAt is a UTC ISO string.
+export type Patient = CreatePatientData & {
+  id: string;
+  createdAt: string;
+};

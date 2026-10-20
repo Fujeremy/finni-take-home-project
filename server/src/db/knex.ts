@@ -1,5 +1,10 @@
 import path from "node:path";
 import knex, { type Knex } from "knex";
+import pg from "pg";
+
+// Return DATE columns (birth dates) as the stored YYYY-MM-DD text. The driver's default
+// turns them into a JavaScript Date at local midnight, which can shift the day in JSON.
+pg.types.setTypeParser(pg.types.builtins.DATE, (storedDate: string) => storedDate);
 
 export function createDb(connectionString: string): Knex {
   return knex({ client: "pg", connection: connectionString });
