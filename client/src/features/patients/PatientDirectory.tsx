@@ -10,13 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { getPatients } from "@/lib/api";
 import {
   formatAddedAt,
   formatDateOfBirth,
+  formatPatientAddress,
   formatPatientName,
   PATIENT_STATUS_LABELS,
 } from "./patientFormatting";
+import { TruncatedText } from "./TruncatedText";
 
 // Color supports the text label; it is never the only way to tell statuses apart.
 const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
@@ -26,52 +29,44 @@ const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
   churned: "bg-zinc-200 text-zinc-700",
 };
 
-// Long names and addresses wrap inside their cell instead of widening the page.
-const WRAPPING_CELL = "whitespace-normal align-top wrap-anywhere";
-
-function PatientAddress({ patient }: { patient: Patient }) {
-  return (
-    <div>
-      <span className="block">{patient.addressLine1}</span>
-      {patient.addressLine2 && <span className="block">{patient.addressLine2}</span>}
-      <span className="block">
-        {patient.city}, {patient.region} {patient.postalCode}
-      </span>
-      <span className="block">{patient.country}</span>
-    </div>
-  );
-}
-
+// Fixed column widths keep every row on one line: long names and addresses are shortened
+// with "…" instead of widening their column or wrapping.
 function PatientTable({ patients }: { patients: Patient[] }) {
   return (
-    <Table aria-label="Patients">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Date of birth</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Address</TableHead>
-          <TableHead>Added</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {patients.map((patient) => (
-          <TableRow key={patient.id}>
-            <TableCell className={`${WRAPPING_CELL} font-medium`}>{formatPatientName(patient)}</TableCell>
-            <TableCell className="align-top">{formatDateOfBirth(patient.dateOfBirth)}</TableCell>
-            <TableCell className="align-top">
-              <Badge className={STATUS_BADGE_CLASSES[patient.status]}>
-                {PATIENT_STATUS_LABELS[patient.status]}
-              </Badge>
-            </TableCell>
-            <TableCell className={WRAPPING_CELL}>
-              <PatientAddress patient={patient} />
-            </TableCell>
-            <TableCell className="align-top">{formatAddedAt(patient.createdAt)}</TableCell>
+    // A short hover delay keeps tooltips from flashing as the pointer passes over rows.
+    // Keyboard focus still opens them right away.
+    <TooltipProvider delayDuration={300}>
+      <Table aria-label="Patients" className="table-fixed">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[24%]">Name</TableHead>
+            <TableHead className="w-[12%]">Date of birth</TableHead>
+            <TableHead className="w-[11%]">Status</TableHead>
+            <TableHead className="w-[35%]">Address</TableHead>
+            <TableHead className="w-[18%]">Added</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {patients.map((patient) => (
+            <TableRow key={patient.id}>
+              <TableCell className="font-medium">
+                <TruncatedText text={formatPatientName(patient)} />
+              </TableCell>
+              <TableCell>{formatDateOfBirth(patient.dateOfBirth)}</TableCell>
+              <TableCell>
+                <Badge className={STATUS_BADGE_CLASSES[patient.status]}>
+                  {PATIENT_STATUS_LABELS[patient.status]}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <TruncatedText text={formatPatientAddress(patient)} />
+              </TableCell>
+              <TableCell>{formatAddedAt(patient.createdAt)}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TooltipProvider>
   );
 }
 

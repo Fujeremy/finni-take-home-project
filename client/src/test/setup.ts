@@ -14,6 +14,16 @@ if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
 
+// TruncatedText watches its width with ResizeObserver. jsdom never resizes anything, so a
+// stand-in that never reports a change is enough.
+if (!globalThis.ResizeObserver) {
+  globalThis.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 // Unmount rendered components after each test so tests never see each other's output.
 afterEach(() => {
   cleanup();

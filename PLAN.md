@@ -44,6 +44,9 @@ button.
 ### View patients
 
 - Show each patient’s name, date of birth, status, and full address.
+  Show the address on one line, with its parts separated by commas.
+- Keep each patient on one line. Shorten long names and addresses with
+  “…” and show the full text in a tooltip on hover or keyboard focus.
 - Show when each patient was added, in the viewer's timezone.
 - Use a simple table for the supported desktop view.
 - Display status as a text label with a supporting color.
@@ -261,7 +264,8 @@ Typecheck, lint, tests, and production build must pass.
 - Create a patient with every field populated.
 - Create a patient without optional fields.
 - Refresh and confirm all saved values remain.
-- Check long names and addresses.
+- Check that long names and addresses stay on one line and show their
+  full text on hover and keyboard focus.
 - Complete the form using a keyboard.
 - Verify supported desktop layouts, including 1440px.
 - Confirm useful feedback when the API is unavailable.
