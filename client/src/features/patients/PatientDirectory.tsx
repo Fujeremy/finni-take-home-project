@@ -67,11 +67,11 @@ function PatientTable({ patients }: { patients: Patient[] }) {
         <Table aria-label="Patients" className="table-fixed">
           <TableHeader className="[&_tr]:border-b-0">
             <TableRow className="hover:bg-transparent">
-              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[24%]`}>Name</TableHead>
+              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[30%]`}>Name</TableHead>
               <TableHead className={`${COLUMN_HEADER_CLASSES} w-[12%]`}>Date of birth</TableHead>
               <TableHead className={`${COLUMN_HEADER_CLASSES} w-[11%]`}>Status</TableHead>
-              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[35%]`}>Address</TableHead>
-              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[18%]`}>Added</TableHead>
+              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[34%]`}>Address</TableHead>
+              <TableHead className={`${COLUMN_HEADER_CLASSES} w-[13%]`}>Added</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

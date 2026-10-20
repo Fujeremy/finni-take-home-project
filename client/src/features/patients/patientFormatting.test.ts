@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import { formatAddedAt, formatDateOfBirth } from "./patientFormatting";
 
 describe("formatAddedAt", () => {
-  it("shows the creation time in the viewer's timezone", () => {
+  it("shows the date a patient was added in the viewer's timezone, without the time", () => {
     const createdAt = "2026-10-20T03:14:00.000Z";
 
-    const torontoTime = formatAddedAt(createdAt, "America/Toronto");
-    const tokyoTime = formatAddedAt(createdAt, "Asia/Tokyo");
+    const torontoDate = formatAddedAt(createdAt, "America/Toronto");
+    const tokyoDate = formatAddedAt(createdAt, "Asia/Tokyo");
 
-    expect(torontoTime).toBe("Oct 19, 2026, 11:14 PM");
-    expect(tokyoTime).toBe("Oct 20, 2026, 12:14 PM");
+    expect(torontoDate).toBe("Oct 19, 2026");
+    expect(tokyoDate).toBe("Oct 20, 2026");
   });
 });
 
