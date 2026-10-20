@@ -65,7 +65,7 @@ describe("PatientDirectory", () => {
       "Jordan Lee Rivera",
       "Mar 14, 1988",
       "Active",
-      "42 Maple LaneUnit 3Springfield, ON K1A 0B1CA",
+      "42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA",
       "Oct 19, 2026, 11:14 PM",
     ]);
   });
@@ -77,7 +77,7 @@ describe("PatientDirectory", () => {
     renderDirectory();
 
     expect(await screen.findByRole("cell", { name: "Jordan Rivera" })).toBeInTheDocument();
-    expect(screen.queryByText("Unit 3")).not.toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "42 Maple Lane, Springfield, ON K1A 0B1, CA" })).toBeInTheDocument();
   });
 
   it("shows the birth date as the same day for a viewer behind UTC", async () => {

@@ -44,6 +44,7 @@ button.
 ### View patients
 
 - Show each patient’s name, date of birth, status, and full address.
+  Show the address on one line, with its parts separated by commas.
 - Show when each patient was added, in the viewer's timezone.
 - Use a simple table for the supported desktop view.
 - Display status as a text label with a supporting color.

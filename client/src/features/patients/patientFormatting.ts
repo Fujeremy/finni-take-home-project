@@ -14,6 +14,17 @@ export function formatPatientName(patient: Patient): string {
   return `${patient.firstName} ${patient.lastName}`;
 }
 
+// One line, e.g. "42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA". An empty second line is left out.
+export function formatPatientAddress(patient: Patient): string {
+  const addressParts = [patient.addressLine1];
+  if (patient.addressLine2) {
+    addressParts.push(patient.addressLine2);
+  }
+  addressParts.push(`${patient.city}, ${patient.region} ${patient.postalCode}`);
+  addressParts.push(patient.country);
+  return addressParts.join(", ");
+}
+
 // Birth dates are calendar dates, not moments in time. Formatting them in UTC keeps
 // "1988-03-14" as March 14 for every viewer instead of shifting it by their timezone.
 const dateOfBirthFormat = new Intl.DateTimeFormat("en-US", {

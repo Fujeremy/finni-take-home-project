@@ -14,6 +14,7 @@ import { getPatients } from "@/lib/api";
 import {
   formatAddedAt,
   formatDateOfBirth,
+  formatPatientAddress,
   formatPatientName,
   PATIENT_STATUS_LABELS,
 } from "./patientFormatting";
@@ -28,19 +29,6 @@ const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
 
 // Long names and addresses wrap inside their cell instead of widening the page.
 const WRAPPING_CELL = "whitespace-normal align-top wrap-anywhere";
-
-function PatientAddress({ patient }: { patient: Patient }) {
-  return (
-    <div>
-      <span className="block">{patient.addressLine1}</span>
-      {patient.addressLine2 && <span className="block">{patient.addressLine2}</span>}
-      <span className="block">
-        {patient.city}, {patient.region} {patient.postalCode}
-      </span>
-      <span className="block">{patient.country}</span>
-    </div>
-  );
-}
 
 function PatientTable({ patients }: { patients: Patient[] }) {
   return (
@@ -64,9 +52,7 @@ function PatientTable({ patients }: { patients: Patient[] }) {
                 {PATIENT_STATUS_LABELS[patient.status]}
               </Badge>
             </TableCell>
-            <TableCell className={WRAPPING_CELL}>
-              <PatientAddress patient={patient} />
-            </TableCell>
+            <TableCell className={WRAPPING_CELL}>{formatPatientAddress(patient)}</TableCell>
             <TableCell className="align-top">{formatAddedAt(patient.createdAt)}</TableCell>
           </TableRow>
         ))}
