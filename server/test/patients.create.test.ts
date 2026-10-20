@@ -223,6 +223,44 @@ describe("POST /api/patients", () => {
     expect(await countSavedPatients()).toBe(0);
   });
 
+  it("rejects a text/plain body with 415 and saves nothing", async () => {
+    const app = createApp(testDb);
+
+    const response = await request(app)
+      .post("/api/patients")
+      .set("Content-Type", "text/plain")
+      .send("Jordan Rivera");
+
+    expect(response.status).toBe(415);
+    expect(response.body).toEqual({
+      error: {
+        code: "UNSUPPORTED_MEDIA_TYPE",
+        message: "Send the patient as JSON.",
+      },
+    });
+    expect(await countSavedPatients()).toBe(0);
+  });
+
+  it("reports each required field as missing when the request has no body", async () => {
+    const app = createApp(testDb);
+
+    const response = await request(app).post("/api/patients");
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe("VALIDATION_ERROR");
+    expect(Object.keys(response.body.error.fieldErrors)).toEqual([
+      "firstName",
+      "lastName",
+      "dateOfBirth",
+      "status",
+      "addressLine1",
+      "city",
+      "region",
+      "postalCode",
+      "country",
+    ]);
+  });
+
   it("rejects a body over 100 KB with 413 and saves nothing", async () => {
     const app = createApp(testDb);
     const oversizedInput = { ...validPatientInput, firstName: "a".repeat(101 * 1024) };

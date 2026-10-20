@@ -187,6 +187,7 @@ No additional search or sorting indexes are necessary initially.
 - Return 400 with field-level details for invalid input.
 - Invalid input returns 400 with `{ "error": { "code": "VALIDATION_ERROR", "message", "fieldErrors": { "<field>": ["<message>"] } } }`, keyed by the JSON field names.
 - A body that is not valid JSON, or is JSON but not an object, returns 400 with code `INVALID_JSON`.
+- A body sent in a format other than JSON returns 415 with code `UNSUPPORTED_MEDIA_TYPE`.
 
 ### GET /api/patients
 
