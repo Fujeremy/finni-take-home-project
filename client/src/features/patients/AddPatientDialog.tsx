@@ -53,6 +53,15 @@ const EMPTY_PATIENT_FORM: CreatePatientInput = {
   country: "",
 };
 
+// Always takes one line of space, so an error appearing doesn't push the fields below it down.
+function ReservedFieldError({ id, error }: { id: string; error: { message?: string } | undefined }) {
+  return (
+    <div className="min-h-5">
+      <FieldError id={id} errors={[error]} />
+    </div>
+  );
+}
+
 type PatientTextFieldProps = {
   name: TextFieldName;
   label: string;
@@ -95,7 +104,7 @@ function PatientTextField({ name, label, optional = false, hint, type = "text", 
         {...register(name)}
       />
       {hint && <FieldDescription id={hintId}>{hint}</FieldDescription>}
-      <FieldError id={errorId} errors={[error]} />
+      <ReservedFieldError id={errorId} error={error} />
     </Field>
   );
 }
@@ -129,7 +138,7 @@ function PatientStatusField() {
               ))}
             </SelectContent>
           </Select>
-          <FieldError id="patient-status-error" errors={[fieldState.error]} />
+          <ReservedFieldError id="patient-status-error" error={fieldState.error} />
         </Field>
       )}
     />
