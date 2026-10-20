@@ -171,6 +171,12 @@ No additional search or sorting indexes are necessary initially.
 
 ## 7. API
 
+### GET /api/health
+
+- Confirm the API is running and can reach the database with a trivial query.
+- Return 200 with `{ "status": "ok" }`.
+- Database failures use the standard JSON error response.
+
 ### POST /api/patients
 
 - Validate the request on the server using the shared `createPatientSchema`.
@@ -197,7 +203,7 @@ Log diagnostic details on the server without returning them to users.
 - Set up the client, server, and database.
 - Wire shared validation imports for the client and server.
 - Add environment configuration and a patient-table migration.
-- Confirm the frontend can call the API.
+- Confirm the frontend can call the API through `GET /api/health`.
 
 ### B. Complete the core workflow
 
