@@ -12,8 +12,8 @@ Included functionality and optional enhancements are defined in
 | Feature | Current limitation |
 |---|---|
 | Responsive design | Only desktop layouts are supported and verified. Mobile and tablet layouts are outside scope. |
-| Search, filter, and sort scope | Search, the status filter, and sorting run only in the browser over the full loaded list (see Pagination); the API has no search, filter, sort, or pagination parameters. Search matches patient names only, not addresses, birth dates, or other fields. Sorting is limited to added date and last name. All three reset when the page is refreshed rather than being kept in the URL. |
-| Pagination | The initial directory retrieves and displays all patients in one list, without page navigation or a page-size selector. This is intended for the small demonstration dataset; performance with large datasets has not been verified. |
+| Search, filter, and sort scope | Search, the status filter, and sorting run only in the browser over the full loaded list (see Pagination); the API has no search, filter, sort, or pagination parameters, which a production version would add for scale. Search matches patient names only, not addresses, birth dates, or other fields. Sorting is limited to added date and last name. All three reset when the page is refreshed rather than being kept in the URL. |
+| Pagination | Pagination runs only in the browser over the full list returned by one request. This is intended for the small demonstration dataset; performance with large datasets has not been verified. A production version would page on the server, so the browser loads one page at a time. The page and page size reset when the page is refreshed rather than being kept in the URL. |
 | Patient updates | Saved patient information cannot be edited, including patient status. Corrections and status transitions are outside scope. |
 | Archiving and restoring | Patients cannot be archived, hidden through an archive workflow, or restored. The Churned status is a patient status, not an archive mechanism. |
 | Hard deletion | Patients cannot be permanently deleted through the UI or API. |
