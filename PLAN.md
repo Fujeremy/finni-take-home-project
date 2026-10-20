@@ -44,6 +44,7 @@ button.
 ### View patients
 
 - Show each patient’s name, date of birth, status, and full address.
+- Show when each patient was added, in the viewer's timezone.
 - Use a simple table for the supported desktop view.
 - Display status as a text label with a supporting color.
 - Display all patients in one list, ordered as defined in §7 (API).
@@ -64,6 +65,7 @@ Use a standard accessible dialog containing one form.
 - On success, close the dialog, refresh the directory, and show
   a confirmation message.
 - Allow cancellation without saving.
+- Ask before discarding entered values when the dialog is closed.
 - Manage keyboard focus when opening and closing the dialog.
 
 ## 5. Stack and structure
@@ -160,9 +162,9 @@ Use one `patients` table:
 ### Dates and timezones
 
 - Store birth dates as `YYYY-MM-DD` dates without timezone conversion.
-  Reject invalid dates and dates after today in the provider's timezone.
-- Send the browser's IANA timezone in `X-Time-Zone`; the server validates
-  it and uses its own clock with the shared schema to determine today.
+  Reject invalid dates, dates before 1900-01-01, and dates after today.
+- The client and server each determine today from their own local date.
+  See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) for the timezone assumption.
 - Store creation timestamps as `timestamptz`, return UTC ISO strings,
   and display them in the viewer's browser timezone.
 
@@ -183,6 +185,8 @@ No additional search or sorting indexes are necessary initially.
 - Insert the patient into PostgreSQL.
 - Return 201 with the complete saved patient.
 - Return 400 with field-level details for invalid input.
+- Invalid input returns 400 with `{ "error": { "code": "VALIDATION_ERROR", "message", "fieldErrors": { "<field>": ["<message>"] } } }`, keyed by the JSON field names.
+- A body that is not valid JSON returns 400 with code `INVALID_JSON`.
 
 ### GET /api/patients
 
@@ -234,8 +238,8 @@ Cover meaningful behavior:
   are rejected without saving a record.
 - Country codes are normalized to uppercase and invalid formats rejected.
 - Missing or invalid status is rejected; the form starts with Inquiry.
-- Verify birth-date validation and timestamp display across timezones,
-  including midnight boundaries and missing or invalid timezone headers.
+- Verify birth-date validation, including dates before 1900 and after
+  today, and timestamp display across timezones.
 - Listing returns persisted patients.
 - An empty database returns an empty collection.
 - Form validation identifies invalid fields.
