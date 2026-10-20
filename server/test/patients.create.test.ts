@@ -207,4 +207,20 @@ describe("POST /api/patients", () => {
     });
     expect(await countSavedPatients()).toBe(0);
   });
+
+  it("rejects a body over 100 KB with 413 and saves nothing", async () => {
+    const app = createApp(testDb);
+    const oversizedInput = { ...validPatientInput, firstName: "a".repeat(101 * 1024) };
+
+    const response = await request(app).post("/api/patients").send(oversizedInput);
+
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({
+      error: {
+        code: "PAYLOAD_TOO_LARGE",
+        message: "The request is too large.",
+      },
+    });
+    expect(await countSavedPatients()).toBe(0);
+  });
 });
