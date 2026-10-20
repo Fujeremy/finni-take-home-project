@@ -27,7 +27,7 @@ Use one main page with a patient directory and an **Add patient** button.
 
 ### Patient directory
 
-Display a desktop table containing each patient’s full name, birth date, status, address, and creation time. Show creation times in the viewer’s timezone and status as text with a supporting color.
+Display a desktop table containing each patient’s full name, birth date, status, address, and the date they were added. Show the added date in the viewer’s timezone, without the time, and status as text with a supporting color.
 
 Keep rows on one line, with comma-separated address parts. Truncate long names and addresses and expose the full text on hover or keyboard focus. Avoid page-level horizontal scrolling.
 
