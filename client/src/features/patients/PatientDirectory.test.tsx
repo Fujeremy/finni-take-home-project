@@ -97,7 +97,8 @@ describe("PatientDirectory", () => {
 
     await user.hover(shortenedName);
 
-    expect(await screen.findByRole("tooltip")).toHaveTextContent("Jordan Lee Rivera");
+    // Hover tooltips open after a 700ms delay, so wait longer than the default 1 second.
+    expect(await screen.findByRole("tooltip", {}, { timeout: 2000 })).toHaveTextContent("Jordan Lee Rivera");
   });
 
   it("shows the full address in a tooltip when the provider tabs to a shortened address", async () => {
