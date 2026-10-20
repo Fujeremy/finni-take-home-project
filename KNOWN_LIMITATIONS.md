@@ -24,6 +24,8 @@ Included functionality and optional enhancements are defined in
 | Duplicate detection and merging | No duplicate warnings or patient merging. |
 | Bulk operations and data transfer | No bulk entry, CSV import/export, or batch actions. Patients are entered individually. |
 | User-controlled sorting | No user-controlled sorting; the fixed order is defined in PLAN.md §7. |
+| Timezone-aware birth-date validation | The client and server each check that a date of birth is not after their own local date. This assumes the provider and server share a timezone, which holds for the documented local setup. If they differ, the server could disagree with the form by one day near midnight. A future version would send the browser's IANA timezone with each request, for example in an `X-Time-Zone` header, and have the server determine "today" in the provider's timezone. |
+| Change tracking (`updated_at`) | Patients store only a creation timestamp (`created_at`). There is no `updated_at` column because saved patients cannot be edited (see Patient updates). If editing is added, a future version would add an `updated_at` column set on every change, alongside the audit history described above. |
 | Production operations | No production deployment setup, automated backup/restore workflow, or production monitoring and alerting. The documented setup runs locally. |
 
 Use fictional patient information only. This submission does not establish

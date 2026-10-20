@@ -47,6 +47,13 @@ npm run dev:client
 Open http://localhost:5173. The page shows "API connected." when the client can
 reach the API through the Vite proxy.
 
+When editing the shared validation code in `shared/`, also run this in a third
+terminal so the API and client pick up each change:
+
+```bash
+npm run dev:shared
+```
+
 ## Test, check, and build
 
 The database must be running. Tests use the separate test database and migrate it
