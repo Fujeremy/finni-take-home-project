@@ -252,7 +252,7 @@ describe("PatientDirectory", () => {
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
 
-      await user.type(searchBox, "riv");
+      await user.type(searchBox, "riv{Enter}");
 
       expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
       expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
@@ -264,7 +264,7 @@ describe("PatientDirectory", () => {
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
 
-      await user.type(searchBox, "zed");
+      await user.type(searchBox, "zed{Enter}");
 
       const noMatches = screen.getByRole("region", { name: "No matching patients" });
       expect(noMatches).toHaveTextContent("No patient names match “zed”.");
@@ -278,12 +278,76 @@ describe("PatientDirectory", () => {
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
-      await user.type(searchBox, "riv");
+      await user.type(searchBox, "riv{Enter}");
 
       await user.clear(searchBox);
 
       expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
       expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+    });
+
+    it("waits for Enter before searching, offering a Search button for the typed text", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      const router = renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+
+      await user.type(searchBox, "riv");
+
+      expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Search" })).toBeInTheDocument();
+      expect(router.state.location.search).toBe("");
+    });
+
+    it("searches on Enter, writing the search to the address and keeping focus in the search box", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      const router = renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+
+      await user.type(searchBox, "  riv {Enter}");
+
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(router.state.location.search).toBe("?q=riv");
+      expect(searchBox).toHaveFocus();
+      expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
+    });
+
+    it("searches with the Search button and returns focus to the search box", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      const router = renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+      await user.type(searchBox, "riv");
+
+      await user.click(screen.getByRole("button", { name: "Search" }));
+
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(router.state.location.search).toBe("?q=riv");
+      expect(searchBox).toHaveFocus();
+    });
+
+    it("clears the search from the table and the address as soon as the box is emptied", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      const router = renderDirectory(["/patients?q=riv"]);
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+
+      await user.clear(searchBox);
+
+      expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
+      expect(router.state.location.search).toBe("");
+    });
+
+    it("shows the search from the address in the box, already applied", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+
+      renderDirectory(["/patients?q=riv"]);
+
+      expect(await screen.findByRole("searchbox", { name: "Search patients by name" })).toHaveValue("riv");
+      expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
     });
 
     it("keeps the search applied when the refreshed list includes a new patient", async () => {
@@ -300,7 +364,7 @@ describe("PatientDirectory", () => {
         .mockResolvedValueOnce(jsonResponse([newRivera, averyChen, savedPatient]));
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
-      await user.type(searchBox, "riv");
+      await user.type(searchBox, "riv{Enter}");
 
       act(() => {
         window.dispatchEvent(new Event("visibilitychange"));
@@ -319,7 +383,7 @@ describe("PatientDirectory", () => {
         .mockRejectedValueOnce(new TypeError("Failed to fetch"));
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
-      await user.type(searchBox, "riv");
+      await user.type(searchBox, "riv{Enter}");
 
       act(() => {
         window.dispatchEvent(new Event("visibilitychange"));
@@ -355,7 +419,7 @@ describe("PatientDirectory", () => {
       const user = userEvent.setup();
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
       renderDirectory();
-      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "chen");
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "chen{Enter}");
 
       await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
 
@@ -408,7 +472,7 @@ describe("PatientDirectory", () => {
       const user = userEvent.setup();
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
       renderDirectory();
-      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "riv");
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "riv{Enter}");
 
       await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
       await user.click(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" }));
@@ -424,7 +488,7 @@ describe("PatientDirectory", () => {
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
       renderDirectory();
       const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
-      await user.type(searchBox, "chen");
+      await user.type(searchBox, "chen{Enter}");
       await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
       await user.click(screen.getByRole("menuitemcheckbox", { name: "Active, 1 patient" }));
       await user.click(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" }));
@@ -449,6 +513,32 @@ describe("PatientDirectory", () => {
       expect(screen.getByRole("button", { name: "Status: All statuses" })).toHaveFocus();
       expect(screen.getAllByRole("row")).toHaveLength(4);
       expect(screen.queryByRole("button", { name: "Clear status filter" })).not.toBeInTheDocument();
+    });
+
+    it("writes the checked statuses to the address in the usual order, and removes them when cleared", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      const router = renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
+      await user.keyboard("{Escape}");
+
+      expect(router.state.location.search).toBe("?status=inquiry,onboarding");
+      await user.click(screen.getByRole("button", { name: "Clear status filter" }));
+      expect(router.state.location.search).toBe("");
+    });
+
+    it("checks the statuses named in the address", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+
+      renderDirectory(["/patients?status=onboarding,inquiry"]);
+
+      expect(await screen.findByRole("button", { name: "Status: Inquiry, Onboarding" })).toBeInTheDocument();
+      expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
+      expect(screen.getByRole("cell", { name: "Sam Rivers" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Jordan Lee Rivera" })).not.toBeInTheDocument();
     });
 
     it("shows no X while every status is shown", async () => {
@@ -520,6 +610,20 @@ describe("PatientDirectory", () => {
       expect(patientNamesInTableOrder()).toEqual(["Avery Chen", "Jordan Lee Rivera", "Sam Rivers"]);
     });
 
+    it("writes the sort to the address, and removes it when Recently added is chosen again", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
+      const router = renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Last name A–Z" }));
+      expect(router.state.location.search).toBe("?sort=last-name-asc");
+
+      await user.click(screen.getByRole("button", { name: "Sort: Last name A–Z" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Recently added" }));
+
+      expect(router.state.location.search).toBe("");
+    });
+
     it("puts the oldest patient first when Oldest added is chosen", async () => {
       const user = userEvent.setup();
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(apiOrder));
@@ -538,7 +642,7 @@ describe("PatientDirectory", () => {
       await user.click(await screen.findByRole("button", { name: "Sort: Recently added" }));
       await user.click(screen.getByRole("menuitemradio", { name: "Last name Z–A" }));
 
-      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "riv");
+      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "riv{Enter}");
 
       expect(patientNamesInTableOrder()).toEqual(["Sam Rivers", "Jordan Lee Rivera"]);
     });
@@ -636,7 +740,7 @@ describe("PatientDirectory", () => {
       renderDirectory();
       await user.click(await screen.findByRole("button", { name: "Next" }));
 
-      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "patient");
+      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "patient{Enter}");
 
       expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
     });
@@ -686,12 +790,88 @@ describe("PatientDirectory", () => {
       expect(patientNamesOnPage()).toHaveLength(20);
     });
 
+    it("writes the page to the address with Next, and removes it with Previous", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      const router = renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Next" }));
+      expect(router.state.location.search).toBe("?page=2");
+
+      await user.click(screen.getByRole("button", { name: "Previous" }));
+
+      expect(router.state.location.search).toBe("");
+    });
+
+    it("writes the rows per page to the address and drops the page", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      const router = renderDirectory(["/patients?page=2"]);
+
+      await user.click(await screen.findByRole("button", { name: "Rows per page: 25" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "50" }));
+
+      expect(router.state.location.search).toBe("?size=50");
+    });
+
+    it("restores the search, statuses, sort, and page from the address", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+
+      renderDirectory(["/patients?q=patient&status=active&sort=last-name-desc&page=2"]);
+
+      expect(await screen.findByText("26–30 of 30")).toBeInTheDocument();
+      expect(screen.getByRole("searchbox", { name: "Search patients by name" })).toHaveValue("patient");
+      expect(screen.getByRole("button", { name: "Status: Active" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Sort: Last name Z–A" })).toBeInTheDocument();
+      expect(patientNamesOnPage()).toEqual(["Patient 05", "Patient 04", "Patient 03", "Patient 02", "Patient 01"]);
+    });
+
+    it("restores the rows per page from the address", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+
+      renderDirectory(["/patients?size=50"]);
+
+      expect(await screen.findByRole("button", { name: "Rows per page: 50" })).toBeInTheDocument();
+      expect(screen.getByText("1–30 of 30")).toBeInTheDocument();
+    });
+
+    it("shows the defaults when the address has values it doesn't recognize", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+
+      renderDirectory(["/patients?status=archived&sort=newest&page=abc&size=30"]);
+
+      expect(await screen.findByText("1–25 of 30")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Status: All statuses" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Sort: Recently added" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Rows per page: 25" })).toBeInTheDocument();
+    });
+
+    it("shows the last page when the address asks for a page past the end", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+
+      renderDirectory(["/patients?page=9"]);
+
+      expect(await screen.findByText("26–30 of 30")).toBeInTheDocument();
+    });
+
+    it("changes settings without adding history entries, so Back leaves the directory", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      const router = renderDirectory(["/somewhere-else", "/patients"]);
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "patient{Enter}");
+      await user.click(screen.getByRole("button", { name: "Next" }));
+
+      await act(() => router.navigate(-1));
+
+      expect(router.state.location.pathname).toBe("/somewhere-else");
+      expect(screen.getByText("Another page")).toBeInTheDocument();
+    });
+
     it("hides the pager when no patients match", async () => {
       const user = userEvent.setup();
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
       renderDirectory();
 
-      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "zed");
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "zed{Enter}");
 
       expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /^Rows per page/ })).not.toBeInTheDocument();

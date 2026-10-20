@@ -1,7 +1,15 @@
 import type { Patient, PatientStatus } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, XIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CornerDownLeftIcon,
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
+import { type FormEvent, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +32,14 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getPatients } from "@/lib/api";
 import {
+  type DirectorySettings,
+  PAGE_SIZE_OPTIONS,
+  type PageSize,
+  readDirectorySettings,
+  STATUS_FILTER_OPTIONS,
+  toSearchString,
+} from "./directorySettings";
+import {
   formatAddedAt,
   formatDateOfBirth,
   formatPatientAddress,
@@ -33,12 +49,6 @@ import {
 import { matchesNameSearch } from "./patientSearch";
 import { PATIENT_SORT_LABELS, PATIENT_SORT_ORDERS, sortPatients, type PatientSortOrder } from "./patientSorting";
 import { TruncatedText } from "./TruncatedText";
-
-// The statuses in their usual order, taken from the labels rather than importing
-// PATIENT_STATUSES from @finni/shared: any value imported from there brings the whole
-// shared schema and zod into the page's first download instead of the dialog's file.
-// The labels record lists every status, so this stays complete; Object.keys only loses the key type.
-const STATUS_FILTER_OPTIONS = Object.keys(PATIENT_STATUS_LABELS) as PatientStatus[];
 
 // Color supports the text label; it is never the only way to tell statuses apart.
 const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
@@ -285,10 +295,6 @@ function SortMenu({ sortOrder, onSortOrderChange }: SortMenuProps) {
   );
 }
 
-const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
-
-type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
-
 // The ends use aria-disabled instead of disabled: a disabled button drops keyboard focus,
 // so pressing Next onto the last page would lose the provider's place.
 const UNAVAILABLE_PAGE_BUTTON_CLASSES = "aria-disabled:pointer-events-none aria-disabled:opacity-50";
@@ -388,17 +394,101 @@ function PatientPager({
   );
 }
 
+type NameSearchProps = {
+  appliedSearchText: string;
+  onSearchTextChange: (searchText: string) => void;
+};
+
+// The table only filters once the provider presses Enter or the ↵ button, so the box holds
+// typed text that may not be applied yet. Emptying the box clears the search right away;
+// otherwise an empty box would still be filtering by the last search.
+function NameSearch({ appliedSearchText, onSearchTextChange }: NameSearchProps) {
+  const [typedText, setTypedText] = useState(appliedSearchText);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // When the applied search changes from outside the box, such as Back to another address,
+  // the box shows it. Adjusting state during render avoids a flash of the old text.
+  const [lastAppliedSearchText, setLastAppliedSearchText] = useState(appliedSearchText);
+  if (appliedSearchText !== lastAppliedSearchText) {
+    setLastAppliedSearchText(appliedSearchText);
+    setTypedText(appliedSearchText);
+  }
+
+  const trimmedTypedText = typedText.trim();
+  const hasUnappliedText = trimmedTypedText !== appliedSearchText;
+
+  function changeTypedText(nextTypedText: string) {
+    setTypedText(nextTypedText);
+    if (nextTypedText.trim() === "" && appliedSearchText !== "") {
+      onSearchTextChange("");
+    }
+  }
+
+  // Clicking ↵ moves focus to it, and it disappears once the search applies, so focus
+  // returns to the box either way.
+  function applySearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    searchInputRef.current?.focus();
+    if (hasUnappliedText) {
+      onSearchTextChange(trimmedTypedText);
+    }
+  }
+
+  return (
+    <form role="search" aria-label="Patient search" onSubmit={applySearch} className="relative w-80">
+      <SearchIcon
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+      />
+      {/* The right padding leaves room for ↵; the browser's own clear button sits just before it. */}
+      <Input
+        ref={searchInputRef}
+        type="search"
+        aria-label="Search patients by name"
+        placeholder="Search by name"
+        value={typedText}
+        onChange={(event) => changeTypedText(event.target.value)}
+        className={hasUnappliedText ? "h-10 pr-9 pl-8" : "h-10 pl-8"}
+      />
+      {hasUnappliedText && (
+        <Button
+          type="submit"
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Search"
+          title="Press Enter to search"
+          className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground"
+        >
+          <CornerDownLeftIcon aria-hidden="true" />
+        </Button>
+      )}
+    </form>
+  );
+}
+
 // The filters live here rather than in PatientDirectory so they only exist once there are
-// patients to filter. This component stays mounted while the list refreshes, so a refresh,
-// a failed refresh, or a newly added patient keeps the provider's filters, sort, and page.
+// patients to filter. Their settings live in the page address, so reloading or coming back
+// to the directory restores them; a refresh or a newly added patient keeps them too.
 function FilterablePatientList({ patients }: { patients: Patient[] }) {
-  const [searchText, setSearchText] = useState("");
-  // Empty means every status is shown.
-  const [selectedStatuses, setSelectedStatuses] = useState<PatientStatus[]>([]);
-  const [sortOrder, setSortOrder] = useState<PatientSortOrder>("recently-added");
-  const [pageNumber, setPageNumber] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSize>(25);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { searchText, selectedStatuses, sortOrder, pageNumber, pageSize } = readDirectorySettings(searchParams);
   const tableRef = useRef<HTMLDivElement>(null);
+
+  // Replacing the history entry means Back leaves the directory instead of stepping through
+  // every filter and page the provider tried. navigate keeps the query string as written;
+  // setSearchParams would encode the commas between statuses again.
+  function changeSettings(changedSettings: Partial<DirectorySettings>) {
+    const nextSettings: DirectorySettings = {
+      searchText,
+      selectedStatuses,
+      sortOrder,
+      pageNumber,
+      pageSize,
+      ...changedSettings,
+    };
+    navigate({ search: toSearchString(nextSettings) }, { replace: true });
+  }
 
   const isFilteringByStatus = selectedStatuses.length > 0;
   const matchingPatients = patients.filter((patient) => {
@@ -418,29 +508,25 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
   // Changing what's listed or how it's ordered starts again from the first page, so the
   // provider never lands on a page that no longer exists.
   function changeSearchText(nextSearchText: string) {
-    setSearchText(nextSearchText);
-    setPageNumber(1);
+    changeSettings({ searchText: nextSearchText, pageNumber: 1 });
   }
 
   function changeSelectedStatuses(nextStatuses: PatientStatus[]) {
-    setSelectedStatuses(nextStatuses);
-    setPageNumber(1);
+    changeSettings({ selectedStatuses: nextStatuses, pageNumber: 1 });
   }
 
   function changeSortOrder(nextSortOrder: PatientSortOrder) {
-    setSortOrder(nextSortOrder);
-    setPageNumber(1);
+    changeSettings({ sortOrder: nextSortOrder, pageNumber: 1 });
   }
 
   function changePageSize(nextPageSize: PageSize) {
-    setPageSize(nextPageSize);
-    setPageNumber(1);
+    changeSettings({ pageSize: nextPageSize, pageNumber: 1 });
   }
 
   // Focus stays on the Previous or Next button; only the table scrolls back into view. It
   // scrolls only when its top is above the window, so a table already in view doesn't jump.
   function goToPage(nextPageNumber: number) {
-    setPageNumber(nextPageNumber);
+    changeSettings({ pageNumber: nextPageNumber });
     const tableElement = tableRef.current;
     if (tableElement && tableElement.getBoundingClientRect().top < 0) {
       tableElement.scrollIntoView({ block: "start" });
@@ -450,20 +536,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <div className="relative w-80">
-          <SearchIcon
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            type="search"
-            aria-label="Search patients by name"
-            placeholder="Search by name"
-            value={searchText}
-            onChange={(event) => changeSearchText(event.target.value)}
-            className="h-10 pl-8"
-          />
-        </div>
+        <NameSearch appliedSearchText={searchText} onSearchTextChange={changeSearchText} />
         <StatusFilter
           patients={patients}
           selectedStatuses={selectedStatuses}
