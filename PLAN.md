@@ -33,7 +33,12 @@ Features outside the initial submission scope are listed in
 - Use fictional patient information only.
 - The application represents one provider workspace.
 - Different patients may have the same name.
-- The demonstration dataset is small enough to display in one list.
+- The demonstration dataset is small enough to load in one request and
+  page through in the browser. Searching, filtering, sorting, and paging
+  in the browser is a take-home simplification: with a large patient
+  list they should move to the server, as query parameters on
+  `GET /api/patients` backed by database indexes, so the browser loads
+  one page at a time.
 - Field and date rules are defined in §6 (Data model).
 
 ## 4. Core user experience
@@ -50,7 +55,7 @@ button.
 - Show when each patient was added, in the viewer's timezone.
 - Use a simple table for the supported desktop view.
 - Display status as a text label with a supporting color.
-- Display all patients in one list, ordered as defined in §7 (API) by default.
+- Show patients one page at a time (see “Page through patients”), ordered as defined in §7 (API) by default.
 - Include a helpful empty state that points to the “Add patient” button in the page header.
 - Show loading and error states, including a retry action.
 - Keep information readable without page-level horizontal scrolling.
@@ -85,6 +90,25 @@ Search, filter, and sort the loaded list in the browser; the API is unchanged.
   from the “No patients yet” state.
 - Keep filters and sort after a refresh failure and after adding a
   patient; reset them when the page is reloaded.
+
+### Page through patients
+
+Page through the searched, filtered, and sorted list in the browser;
+the API still returns every patient in one request (see §3).
+
+- Show a pager below the table: a “Rows per page” dropdown menu with
+  25 (default), 50, and 100 on the left, and the shown range, such as
+  “1–25 of 48”, with Previous and Next buttons on the right. The range
+  counts the patients that match the current search and filter.
+- Keep the pager when everything fits on one page, with both buttons
+  disabled. Hide it with the table when nothing matches.
+- Return to page 1 when the search, statuses, sort, or page size change.
+- Keep the current page after a refresh or after adding a patient; when
+  that page no longer exists, show the last page. Reset to page 1 and
+  25 rows when the page is reloaded.
+- When the page changes, scroll the top of the table into view and keep
+  focus on the button that was pressed. Announce the new range in a
+  polite live region.
 
 ### Add a patient
 
@@ -298,6 +322,12 @@ Cover meaningful behavior:
   API order; Oldest added reverses the API order.
 - Sorting applies to the filtered list, does not show the result count,
   and is kept by Clear filters.
+- The pager shows 25 patients at first; Previous and Next move between
+  pages and are disabled at the ends; choosing another page size
+  changes how many rows show.
+- Changing the search or sort returns to page 1; a refresh that removes
+  the current page shows the last page; the pager is hidden when nothing
+  matches.
 
 Run API tests against a separate test database.
 

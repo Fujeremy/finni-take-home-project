@@ -1,6 +1,6 @@
 import type { Patient, PatientStatus } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, SearchIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -245,16 +245,122 @@ function SortMenu({ sortOrder, onSortOrderChange }: SortMenuProps) {
   );
 }
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+
+// The ends use aria-disabled instead of disabled: a disabled button drops keyboard focus,
+// so pressing Next onto the last page would lose the provider's place.
+const UNAVAILABLE_PAGE_BUTTON_CLASSES = "aria-disabled:pointer-events-none aria-disabled:opacity-50";
+
+type PatientPagerProps = {
+  firstShownNumber: number;
+  lastShownNumber: number;
+  matchingCount: number;
+  pageSize: PageSize;
+  onPageSizeChange: (pageSize: PageSize) => void;
+  canGoToPreviousPage: boolean;
+  canGoToNextPage: boolean;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
+};
+
+function PatientPager({
+  firstShownNumber,
+  lastShownNumber,
+  matchingCount,
+  pageSize,
+  onPageSizeChange,
+  canGoToPreviousPage,
+  canGoToNextPage,
+  onPreviousPage,
+  onNextPage,
+}: PatientPagerProps) {
+  // Radix reports the chosen value as a plain string, so map it back to a page size.
+  function choosePageSize(chosenValue: string) {
+    const chosenPageSize = PAGE_SIZE_OPTIONS.find((sizeOption) => String(sizeOption) === chosenValue);
+    if (chosenPageSize) {
+      onPageSizeChange(chosenPageSize);
+    }
+  }
+
+  function goToPreviousPage() {
+    if (canGoToPreviousPage) {
+      onPreviousPage();
+    }
+  }
+
+  function goToNextPage() {
+    if (canGoToNextPage) {
+      onNextPage();
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span>Rows per page</span>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" aria-label={`Rows per page: ${pageSize}`} className="tabular-nums">
+              {pageSize}
+              <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="min-w-24">
+            <DropdownMenuRadioGroup value={String(pageSize)} onValueChange={choosePageSize}>
+              {PAGE_SIZE_OPTIONS.map((sizeOption) => (
+                <DropdownMenuRadioItem key={sizeOption} value={String(sizeOption)} className="tabular-nums">
+                  {sizeOption}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="flex items-center gap-3">
+        {/* Announces the new range when the page, page size, or filters change. */}
+        <p aria-live="polite" className="text-muted-foreground tabular-nums">
+          {firstShownNumber}–{lastShownNumber} of {matchingCount}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            aria-disabled={!canGoToPreviousPage}
+            onClick={goToPreviousPage}
+            className={UNAVAILABLE_PAGE_BUTTON_CLASSES}
+          >
+            <ChevronLeftIcon data-icon="inline-start" aria-hidden="true" />
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            aria-disabled={!canGoToNextPage}
+            onClick={goToNextPage}
+            className={UNAVAILABLE_PAGE_BUTTON_CLASSES}
+          >
+            Next
+            <ChevronRightIcon data-icon="inline-end" aria-hidden="true" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // The filters live here rather than in PatientDirectory so they only exist once there are
 // patients to filter. This component stays mounted while the list refreshes, so a refresh,
-// a failed refresh, or a newly added patient keeps the provider's filters and sort.
+// a failed refresh, or a newly added patient keeps the provider's filters, sort, and page.
 function FilterablePatientList({ patients }: { patients: Patient[] }) {
   const [searchText, setSearchText] = useState("");
   // Empty means every status is shown.
   const [selectedStatuses, setSelectedStatuses] = useState<PatientStatus[]>([]);
   // Sorting isn't a filter: it doesn't show the result count and Clear filters keeps it.
   const [sortOrder, setSortOrder] = useState<PatientSortOrder>("recently-added");
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(25);
   const searchBoxRef = useRef<HTMLInputElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const isSearching = searchText.trim() !== "";
   const isFilteringByStatus = selectedStatuses.length > 0;
@@ -266,9 +372,49 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
   const hasMatches = matchingPatients.length > 0;
   const sortedMatchingPatients = sortPatients(matchingPatients, sortOrder);
 
+  const pageCount = Math.max(1, Math.ceil(sortedMatchingPatients.length / pageSize));
+  // A refresh can leave fewer patients than the current page needs; show the last page that
+  // still exists instead of an empty one.
+  const shownPageNumber = Math.min(pageNumber, pageCount);
+  const firstShownIndex = (shownPageNumber - 1) * pageSize;
+  const patientsOnPage = sortedMatchingPatients.slice(firstShownIndex, firstShownIndex + pageSize);
+
+  // Changing what's listed or how it's ordered starts again from the first page, so the
+  // provider never lands on a page that no longer exists.
+  function changeSearchText(nextSearchText: string) {
+    setSearchText(nextSearchText);
+    setPageNumber(1);
+  }
+
+  function changeSelectedStatuses(nextStatuses: PatientStatus[]) {
+    setSelectedStatuses(nextStatuses);
+    setPageNumber(1);
+  }
+
+  function changeSortOrder(nextSortOrder: PatientSortOrder) {
+    setSortOrder(nextSortOrder);
+    setPageNumber(1);
+  }
+
+  function changePageSize(nextPageSize: PageSize) {
+    setPageSize(nextPageSize);
+    setPageNumber(1);
+  }
+
+  // Focus stays on the Previous or Next button; only the table scrolls back into view. It
+  // scrolls only when its top is above the window, so a table already in view doesn't jump.
+  function goToPage(nextPageNumber: number) {
+    setPageNumber(nextPageNumber);
+    const tableElement = tableRef.current;
+    if (tableElement && tableElement.getBoundingClientRect().top < 0) {
+      tableElement.scrollIntoView({ block: "start" });
+    }
+  }
+
   function clearFilters() {
     setSearchText("");
     setSelectedStatuses([]);
+    setPageNumber(1);
     searchBoxRef.current?.focus();
   }
 
@@ -299,20 +445,33 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
               aria-label="Search patients by name"
               placeholder="Search by name"
               value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
+              onChange={(event) => changeSearchText(event.target.value)}
               className="h-10 pl-8"
             />
           </div>
           <StatusFilter
             patients={patients}
             selectedStatuses={selectedStatuses}
-            onSelectedStatusesChange={setSelectedStatuses}
+            onSelectedStatusesChange={changeSelectedStatuses}
           />
-          <SortMenu sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
+          <SortMenu sortOrder={sortOrder} onSortOrderChange={changeSortOrder} />
         </div>
       </div>
       {hasMatches ? (
-        <PatientTable patients={sortedMatchingPatients} />
+        <div ref={tableRef} className="scroll-mt-4 space-y-4">
+          <PatientTable patients={patientsOnPage} />
+          <PatientPager
+            firstShownNumber={firstShownIndex + 1}
+            lastShownNumber={firstShownIndex + patientsOnPage.length}
+            matchingCount={sortedMatchingPatients.length}
+            pageSize={pageSize}
+            onPageSizeChange={changePageSize}
+            canGoToPreviousPage={shownPageNumber > 1}
+            canGoToNextPage={shownPageNumber < pageCount}
+            onPreviousPage={() => goToPage(shownPageNumber - 1)}
+            onNextPage={() => goToPage(shownPageNumber + 1)}
+          />
+        </div>
       ) : (
         <NoMatchingPatients message={describeNoMatches(searchText, selectedStatuses)} onClearFilters={clearFilters} />
       )}
