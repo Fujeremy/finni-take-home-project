@@ -6,14 +6,17 @@
 |---|---|
 | A. Foundation | **Complete** — approved after Fujeremy/finni-take-home-project#1–#3 merged |
 | B. Core workflow | **Complete** — approved after Fujeremy/finni-take-home-project#4–#7 merged |
-| C. Polish and verify | Implemented — awaiting C2 review and milestone approval |
+| C. Polish and verify | **Complete** — approved after Fujeremy/finni-take-home-project#8–#9 merged |
 
-## Current milestone: C. Polish and verify
+All planned milestones are complete; the take-home is ready to submit.
 
-| PR | Branch | Scope | State |
-|---|---|---|---|
-| C1 | `polish/bundle-size` | Split the add patient dialog out of the page's first download | Merged (Fujeremy/finni-take-home-project#8) |
-| C2 | `polish/readme-verification` | Final README (§11) and the §9 manual checklist on a fresh clone | Committed locally (2 commits), not pushed, awaiting review |
+## Continuous improvements
+
+Developer-requested polish after the milestones, each proposed and approved before work starts.
+
+| Work | Branch | State |
+|---|---|---|
+| 50-patient mock dataset with `db:seed` and `db:reset` | `dev/mock-patients` | Committed locally (3 commits), not pushed, awaiting review |
 
 ## Implemented
 
@@ -25,7 +28,8 @@
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
-- **Current totals:** 45 shared, 20 server, and 28 client tests pass.
+- **Current totals:** 45 shared, 25 server, and 28 client tests pass.
+- **Mock dataset:** all 50 records pass the shared schema; every address is in Canada or the US; every text field hits its limit; `db:seed` and `db:reset` were run through npm against the test database (50 patients, then 50 again, then 0).
 - **C1:** the production build splits into a 332 KB main file (105 KB gzipped) and a 231 KB dialog file, with no size warning. In the browser, the page loads the main file first and the dialog file right after; the first open takes about 44ms. Loading the dialog only on first open was tried and rejected: React's Suspense reveal made that first open take about 334ms.
 - **Screen reader:** the developer reviewed the app with a screen reader (2026-10-20) and found nothing to fix.
 - **§9 manual checklist (2026-10-20):** run in one pass on a fresh clone of `polish/readme-verification` with a fresh database, following the README. All passed:
@@ -70,4 +74,4 @@ None.
 
 ## Next step
 
-Developer review of C2, then approval to push and open it, and approval of Milestone C. With that, the take-home is complete.
+Developer review of the mock dataset, then approval to push and open its PR.

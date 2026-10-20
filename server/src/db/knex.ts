@@ -17,3 +17,10 @@ export const migrationConfig: Knex.MigratorConfig = {
   loadExtensions: [".ts"],
   extension: "ts",
 };
+
+// Seeds fill the development database with mock data (npm run db:seed), also from TypeScript source.
+export const seedConfig: Knex.SeederConfig = {
+  directory: path.join(import.meta.dirname, "seeds"),
+  loadExtensions: [".ts"],
+  extension: "ts",
+};

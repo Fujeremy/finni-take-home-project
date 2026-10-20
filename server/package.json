@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "knex": "tsx ../node_modules/knex/bin/cli.js",
-    "db:migrate": "npm run knex -- migrate:latest"
+    "db:migrate": "npm run knex -- migrate:latest",
+    "db:seed": "npm run knex -- seed:run",
+    "db:reset": "tsx src/db/resetPatients.ts"
   },
   "dependencies": {
     "@finni/shared": "*",

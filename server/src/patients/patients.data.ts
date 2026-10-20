@@ -35,10 +35,13 @@ function toPatient(row: PatientRow): Patient {
   };
 }
 
-// Expects data already checked by createPatientSchema. The database fills in id and created_at.
-export async function createPatient(db: Knex, patient: CreatePatientData): Promise<Patient> {
-  // Typed as a full row so a column added to PatientRow fails to compile until it is filled here.
-  const newRow: Omit<PatientRow, "id" | "created_at"> = {
+// A row ready to insert: every column except the ones the database fills in.
+export type NewPatientRow = Omit<PatientRow, "id" | "created_at">;
+
+// Typed as a full row so a column added to PatientRow fails to compile until it is filled here.
+// Expects data already checked by createPatientSchema.
+export function toNewPatientRow(patient: CreatePatientData): NewPatientRow {
+  return {
     first_name: patient.firstName,
     middle_name: patient.middleName,
     last_name: patient.lastName,
@@ -51,7 +54,11 @@ export async function createPatient(db: Knex, patient: CreatePatientData): Promi
     postal_code: patient.postalCode,
     country: patient.country,
   };
-  const [savedRow] = await db<PatientRow>("patients").insert(newRow).returning("*");
+}
+
+// Expects data already checked by createPatientSchema. The database fills in id and created_at.
+export async function createPatient(db: Knex, patient: CreatePatientData): Promise<Patient> {
+  const [savedRow] = await db<PatientRow>("patients").insert(toNewPatientRow(patient)).returning("*");
 
   if (!savedRow) {
     throw new Error("Inserting a patient returned no row.");
