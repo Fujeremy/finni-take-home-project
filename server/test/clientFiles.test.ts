@@ -22,6 +22,25 @@ describe("serving the built client", () => {
     expect(response.text).toContain("Built client fixture");
   });
 
+  it("serves the client's page for a client route, so a refresh or direct link opens the app", async () => {
+    const app = createApp(testDb, { builtClientPath });
+
+    const response = await request(app).get("/patients/00000000-0000-4000-8000-000000000001");
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toMatch(/text\/html/);
+    expect(response.text).toContain("Built client fixture");
+  });
+
+  it("answers a missing file with a 404 instead of the client's page", async () => {
+    const app = createApp(testDb, { builtClientPath });
+
+    const response = await request(app).get("/assets/missing.js");
+
+    expect(response.status).toBe(404);
+    expect(response.text).not.toContain("Built client fixture");
+  });
+
   it("still answers unknown API paths with a JSON 404", async () => {
     const app = createApp(testDb, { builtClientPath });
 
