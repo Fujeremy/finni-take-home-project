@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Tests run in Node under jsdom and may set process.env.TZ; app code keeps no Node types.
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src"],
+  "exclude": []
+}
