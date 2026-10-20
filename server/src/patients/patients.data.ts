@@ -1,4 +1,4 @@
-import type { Patient, PatientStatus } from "@finni/shared";
+import type { CreatePatientData, Patient, PatientStatus } from "@finni/shared";
 import type { Knex } from "knex";
 
 type PatientRow = {
@@ -33,6 +33,30 @@ function toPatient(row: PatientRow): Patient {
     country: row.country,
     createdAt: row.created_at.toISOString(),
   };
+}
+
+// Expects data already checked by createPatientSchema. The database fills in id and created_at.
+export async function createPatient(db: Knex, patient: CreatePatientData): Promise<Patient> {
+  // Typed as a full row so a column added to PatientRow fails to compile until it is filled here.
+  const newRow: Omit<PatientRow, "id" | "created_at"> = {
+    first_name: patient.firstName,
+    middle_name: patient.middleName,
+    last_name: patient.lastName,
+    date_of_birth: patient.dateOfBirth,
+    status: patient.status,
+    address_line_1: patient.addressLine1,
+    address_line_2: patient.addressLine2,
+    city: patient.city,
+    region: patient.region,
+    postal_code: patient.postalCode,
+    country: patient.country,
+  };
+  const [savedRow] = await db<PatientRow>("patients").insert(newRow).returning("*");
+
+  if (!savedRow) {
+    throw new Error("Inserting a patient returned no row.");
+  }
+  return toPatient(savedRow);
 }
 
 export async function listPatients(db: Knex): Promise<Patient[]> {
