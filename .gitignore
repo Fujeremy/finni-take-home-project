@@ -15,5 +15,8 @@ coverage/
 # Logs
 *.log
 
+# Local design critique reports
+.impeccable/
+
 # macOS files
 .DS_Store
