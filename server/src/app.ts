@@ -1,5 +1,6 @@
 import express, { type ErrorRequestHandler, type Express } from "express";
 import type { Knex } from "knex";
+import { createPatientsRouter } from "./patients/patients.routes.js";
 
 // Logs the full error for diagnosis but never sends its details (SQL, stack, connection info) to users.
 const handleUnexpectedError: ErrorRequestHandler = (error, request, response, _next) => {
@@ -20,6 +21,8 @@ export function createApp(db: Knex): Express {
     await db.raw("select 1");
     response.json({ status: "ok" });
   });
+
+  app.use("/api/patients", createPatientsRouter(db));
 
   app.use(handleUnexpectedError);
 
