@@ -37,7 +37,7 @@ Provide loading, retryable error, and empty states. Distinguish an empty directo
 
 Show a toolbar above the loaded, nonempty directory with:
 
-- **Name search:** Match all query words across first, middle, and last name, ignoring case, accents, and surrounding spaces.
+- **Name search:** Match all query words across first, middle, and last name, ignoring case, accents, and surrounding spaces. Apply the search when the provider presses Enter or the search button. Emptying the box clears the search immediately.
 - **Status filter:** Allow multiple selections and show counts across all patients. No selection includes every status. Provide a clear action.
 - **Sort:** Recently added by default, oldest added, last name A–Z, or last name Z–A. Name sorting compares last, first, then middle name, ignoring case and accents; ties retain API order.
 
@@ -45,7 +45,7 @@ Apply search and status filtering together, then sort and paginate the results.
 
 The pager shows a result range, Previous/Next controls, and page sizes of 25, 50, or 100, defaulting to 25. Disable navigation at page boundaries and hide the pager when no results match.
 
-Return to page 1 when search, filter, sort, or page size changes. Preserve directory settings during refetches and patient creation; clamp unavailable pages to the last page. Reloading the application resets all settings.
+Return to page 1 when search, filter, sort, or page size changes. Preserve directory settings during refetches and patient creation; clamp unavailable pages to the last page. Keep directory settings in the page address, leaving out default values, so reloading or returning to the directory restores them. Ignore unrecognized values. Settings changes replace the current history entry rather than adding one.
 
 Keep controls keyboard accessible, preserve focus after clearing filters or changing pages, scroll the table into view on page changes, and announce the updated range.
 

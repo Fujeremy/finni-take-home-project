@@ -35,9 +35,6 @@ version would add.
 - **Paging runs in the browser.** This suits the small demonstration dataset;
   performance with large datasets has not been verified.
   *Future:* page on the server so the browser loads one page at a time.
-- **View settings are not kept in the URL.** Search, status filter, sort,
-  page, and page size reset when the page is refreshed.
-  *Future:* store them in the URL so views can be refreshed and shared.
 
 ### Managing patient records
 
