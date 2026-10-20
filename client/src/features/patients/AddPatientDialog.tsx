@@ -8,7 +8,7 @@ import {
 } from "@finni/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type RefObject } from "react";
+import { useRef, useState, type RefObject } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -158,6 +158,7 @@ function isPatientFieldName(fieldName: string): fieldName is PatientFieldName {
 
 export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatientDialogProps) {
   const queryClient = useQueryClient();
+  const dialogContentRef = useRef<HTMLDivElement>(null);
   const form = useForm<CreatePatientInput, unknown, CreatePatientData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: EMPTY_PATIENT_FORM,
@@ -237,8 +238,16 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
+        ref={dialogContentRef}
+        tabIndex={-1}
         className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
         showCloseButton={!isSaving}
+        // Focus the dialog itself rather than First name, so no field counts as visited
+        // (and gets checked) until the provider chooses one. Tab moves to First name.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          dialogContentRef.current?.focus();
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusTo.current?.focus();

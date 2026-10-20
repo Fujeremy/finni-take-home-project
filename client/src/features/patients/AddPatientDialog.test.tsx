@@ -36,7 +36,7 @@ afterEach(() => {
 });
 
 describe("Add patient dialog", () => {
-  it("opens from the header with focus on First name and Inquiry selected", async () => {
+  it("opens from the header with focus on the dialog itself and Inquiry selected", async () => {
     const user = userEvent.setup();
     renderApp();
     const header = screen.getByRole("banner");
@@ -44,9 +44,34 @@ describe("Add patient dialog", () => {
     await user.click(within(header).getByRole("button", { name: "Add patient" }));
 
     const dialog = screen.getByRole("dialog", { name: "Add patient" });
-    expect(within(dialog).getByLabelText("First name")).toHaveFocus();
+    expect(dialog).toHaveFocus();
     expect(within(dialog).getByRole("combobox", { name: "Status" })).toHaveTextContent("Inquiry");
     expect(within(dialog).getByLabelText("Middle name (optional)")).toBeInTheDocument();
+  });
+
+  it("moves to First name on the first Tab", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
+    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+
+    await user.tab();
+
+    expect(within(dialog).getByLabelText("First name")).toHaveFocus();
+  });
+
+  it("doesn't flag First name when the provider starts in another field", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
+    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+
+    await user.click(within(dialog).getByLabelText("City"));
+    await user.type(within(dialog).getByLabelText("City"), "Springfield");
+    await user.tab();
+
+    expect(within(dialog).getByLabelText("First name")).not.toHaveAccessibleDescription();
+    expect(within(dialog).getByLabelText("First name")).toHaveAttribute("aria-invalid", "false");
   });
 
   it("marks every missing required field and sends nothing when submitted empty", async () => {

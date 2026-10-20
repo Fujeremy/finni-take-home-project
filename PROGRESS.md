@@ -15,7 +15,7 @@
 | B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
 | B2 | `core/patients-api` | `GET` and `POST /api/patients` | Merged (Fujeremy/finni-take-home-project#5) |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Merged (Fujeremy/finni-take-home-project#6) |
-| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7), 8 commits, awaiting review |
+| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7); 7 commits on GitHub plus 3 local, awaiting review |
 
 ## Implemented (Milestone B so far)
 
@@ -61,13 +61,15 @@ Not yet verified:
 - The client reloading on shared changes: verified in B4.
 
 B4 (2026-10-20, each commit in its own state):
-- `npm test`: 45 shared, 20 server, and 26 client tests pass. Mutations confirmed: allowing close while saving, skipping the directory reload, and skipping the discard prompt each fail tests.
+- `npm test`: 45 shared, 20 server, and 28 client tests pass. Mutations confirmed: allowing close while saving, skipping the directory reload, and skipping the discard prompt each fail tests.
 - `npm run typecheck`, `npm run lint`, `npm run build`: passed. The build warns that the client bundle is 562 KB (175 KB gzipped), over Vite's 500 KB guideline.
 - Browser, keyboard only: opened the dialog, submitted empty (every required field flagged, focus on First name), filled every field including the date and the Radix status select, saved; dialog closed, toast "Avery Jo Chen was added.", country saved as CA, focus returned to Add patient. The patient remained after refresh.
 - Browser: Escape with entries asked to discard; Keep editing kept values; Discard closed without saving. With the API stopped, saving showed "The patient wasn't saved." and kept every value; after restarting the API, saving again succeeded.
 - With `dev:shared` and `dev:client` running, a changed shared message appeared in the form without a restart.
 - Test patients were deleted afterward.
 - Validation on leaving a field: switching back to checking only on Save makes the two leave-the-field tests fail.
+- Reserved error space: in the browser, all eight required errors appearing moved no field and left the form height unchanged. A length message that wraps to two lines in a narrow column still shifts the form by one line.
+- Opening focus: removing the dialog-focus override makes the three focus tests fail, including the one where starting in another field must not flag First name.
 
 Not yet verified: a real screen reader (labels, descriptions, and roles were checked in tests and the browser only).
 
@@ -81,6 +83,8 @@ Not yet verified: a real screen reader (labels, descriptions, and roles were che
 - Form layout groups short fields side by side; region is labelled "Province or state"; the toast names the patient.
 - Inputs have no maxLength: over-limit text is kept and flagged rather than silently cut off.
 - Fields are validated when the provider leaves them (`onTouched`), then live as they are corrected; Save checks every field.
+- Each field reserves one line for its error so errors don't shift the form.
+- Opening the dialog focuses the dialog itself, not First name; the first Tab reaches First name.
 - `@hookform/resolvers` is pinned to 5.2 because 6.x lists optional peers npm cannot resolve together.
 - Light theme only (KNOWN_LIMITATIONS.md); the Sonner component is edited to drop next-themes.
 - The empty state points to the header's Add patient button instead of repeating it (PLAN.md §4 updated).
