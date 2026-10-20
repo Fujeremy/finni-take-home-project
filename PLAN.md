@@ -118,6 +118,8 @@ No client-side router is needed for the core single-page workflow.
 Add React Router if implementing the optional patient detail route.
 
 The Vite development server proxies API requests to Express.
+For a production build, Express also serves the built client, so the
+page and API share one port.
 Docker Compose runs PostgreSQL; the application runs locally.
 
 ## 6. Data model
@@ -186,7 +188,8 @@ No additional search or sorting indexes are necessary initially.
 - Return 201 with the complete saved patient.
 - Return 400 with field-level details for invalid input.
 - Invalid input returns 400 with `{ "error": { "code": "VALIDATION_ERROR", "message", "fieldErrors": { "<field>": ["<message>"] } } }`, keyed by the JSON field names.
-- A body that is not valid JSON returns 400 with code `INVALID_JSON`.
+- A body that is not valid JSON, or is JSON but not an object, returns 400 with code `INVALID_JSON`.
+- A body sent in a format other than JSON returns 415 with code `UNSUPPORTED_MEDIA_TYPE`.
 
 ### GET /api/patients
 
@@ -196,6 +199,9 @@ No additional search or sorting indexes are necessary initially.
 - Return an empty collection when no records exist.
 
 Use camelCase in JSON and snake_case in PostgreSQL.
+
+A request body over 100 KB returns 413 with code `PAYLOAD_TOO_LARGE`.
+An unknown path under `/api` returns 404 with code `NOT_FOUND`.
 
 Handle unexpected failures with a consistent JSON error response.
 Log diagnostic details on the server without returning them to users.

@@ -39,9 +39,21 @@ npm run db:migrate
 test database. `npm run db:migrate` creates the `patients` table in the
 development database.
 
+## Run the app
+
+To try the app, build and start it with one command:
+
+```bash
+npm start
+```
+
+Open http://localhost:3001. Express serves the built page and the API from the same
+port. This is the production build: nothing reloads when files change, so rerun
+`npm start` after editing code, or use the development setup below.
+
 ## Run in development
 
-Start the API and the client in two terminals:
+For live reloading while you edit, start the API and the client in two terminals:
 
 ```bash
 npm run dev:server
@@ -155,7 +167,7 @@ Design choices:
 
 Not included: editing, archiving, or deleting patients; search, filtering, sorting,
 or pagination; sign-in, audit history, or duplicate detection; mobile layouts; dark
-mode; and production deployment (the build compiles, but the app runs locally).
+mode; and production deployment (`npm start` runs the production build, but only locally).
 [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists each one with what a future
 version would add.
 

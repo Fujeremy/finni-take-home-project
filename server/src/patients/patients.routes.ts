@@ -13,6 +13,31 @@ export function createPatientsRouter(db: Knex): Router {
   });
 
   router.post("/", async (request, response) => {
+    // A request that names another format, such as text/plain or a form. A request with no
+    // Content-Type has no body to parse and is still reported field by field below.
+    const hasContentType = request.headers["content-type"] !== undefined;
+    if (hasContentType && !request.is("application/json")) {
+      response.status(415).json({
+        error: {
+          code: "UNSUPPORTED_MEDIA_TYPE",
+          message: "Send the patient as JSON.",
+        },
+      });
+      return;
+    }
+
+    // express.json() already rejects bare strings and numbers. An array is valid JSON but has no
+    // fields to report errors on, so it is rejected as a whole.
+    if (Array.isArray(request.body)) {
+      response.status(400).json({
+        error: {
+          code: "INVALID_JSON",
+          message: "The request body must be a JSON object.",
+        },
+      });
+      return;
+    }
+
     // A request without a JSON body has no body at all; treat it as empty so each field reports what's missing.
     const result = createPatientSchema.safeParse(request.body ?? {});
     if (!result.success) {
