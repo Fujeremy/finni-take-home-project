@@ -35,6 +35,8 @@ Open http://localhost:3001.
 - `npm run db:seed` fills the directory with mock patients (see [Mock data](#mock-data)).
   Skip it to start from an empty directory.
 - `npm start` builds everything and serves the page and the API from port 3001.
+  Nothing reloads when files change, so rerun it after editing code, or use
+  [live reload](#develop-with-live-reload).
 
 ## What it does
 
@@ -51,17 +53,6 @@ Open http://localhost:3001.
 - **Persistence:** records are stored in PostgreSQL and remain after a refresh.
 - **One set of rules:** the same validation code runs in the browser for instant
   feedback and in the API, which enforces it.
-
-## Try it (production build)
-
-Use this to try the app as a reviewer would. It's the last Quick start step:
-
-```bash
-npm start
-```
-
-Open http://localhost:3001. Nothing reloads when files change, so rerun
-`npm start` after editing code, or use live reload below.
 
 ## Develop with live reload
 
@@ -159,42 +150,19 @@ The API has three endpoints, all under `/api`:
 `GET /api/patients` returns every patient in one response. The browser does the
 searching, filtering, sorting, and paging.
 
-## Product assumptions
+## Assumptions and limitations
 
-- All patient information is fictional.
-- The app represents one provider workspace, with no sign-in or separate accounts.
-- Different patients may share the same name.
-- The dataset is small enough to load in one request; search, filtering, sorting,
-  and paging happen in the browser.
-- The supported view is desktop; mobile and tablet layouts are not.
+This is a focused take-home: fictional data, one provider workspace with no
+sign-in, a desktop browser, and a dataset small enough to search and page in
+the browser. Saved patients can't yet be edited, archived, or deleted, and
+addresses are free text.
 
-## Scope and known limitations
-
-[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists every excluded feature and what
-a future version would add. The most important:
-
-- **Browser-only search and paging:** fine for the demonstration data, but a large
-  patient list would need search, filtering, sorting, and paging on the server.
-- **No editing, archiving, or deleting** of saved patients.
-- **No sign-in or audit history:** one shared workspace with no access controls.
-- **Free-text addresses:** a two-letter country code, with no postal code formats
-  or address lookups.
-- **Birth dates** run from January 1, 1900 through today, where "today" is each
-  side's own local date. This assumes the browser and server share a timezone.
-- **Desktop only, light theme only,** and no production deployment (`npm start`
-  runs the production build locally).
-
-## Possible improvements
-
-Beyond the limitations above:
-
-- **Patient detail page** with a direct link for each patient (the optional
-  enhancement in PLAN.md §6).
-- **Continuous integration** running tests, typecheck, lint, and build on every PR.
-- **Automated accessibility checks** alongside manual screen-reader testing.
+[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists every assumption and
+limitation with what a future version would add, followed by possible
+improvements in priority order.
 
 ## Project documentation
 
 - [PLAN.md](PLAN.md): feature scope, stack, architecture, and acceptance checks.
-- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md): excluded features and limitations.
+- [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md): assumptions, limitations, and possible improvements.
 - [CLAUDE.md](CLAUDE.md): agent workflow and code/test readability standards.
