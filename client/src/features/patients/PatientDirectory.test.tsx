@@ -60,7 +60,7 @@ describe("PatientDirectory", () => {
     expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
-  it("shows each saved patient's name, birth date, status, address, and added time", async () => {
+  it("shows each saved patient's name, birth date, status, address, and the date they were added", async () => {
     process.env.TZ = "America/Toronto";
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
 
@@ -74,7 +74,7 @@ describe("PatientDirectory", () => {
       "Mar 14, 1988",
       "Active",
       "42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA",
-      "Oct 19, 2026, 11:14 PM",
+      "Oct 19, 2026",
     ]);
   });
 

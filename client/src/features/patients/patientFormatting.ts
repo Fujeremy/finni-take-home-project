@@ -38,12 +38,12 @@ export function formatDateOfBirth(isoDate: string): string {
   return dateOfBirthFormat.format(new Date(`${isoDate}T00:00:00Z`));
 }
 
-// Shows the creation time in the viewer's timezone, e.g. "Oct 19, 2026, 9:42 PM".
-// timeZone defaults to the browser's own; tests pass one explicitly.
+// Shows the date a patient was added in the viewer's timezone, e.g. "Oct 19, 2026". The time
+// is left out; the stored timestamp still has it. timeZone defaults to the browser's own;
+// tests pass one explicitly.
 export function formatAddedAt(isoTimestamp: string, timeZone?: string): string {
   const addedAtFormat = new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
-    timeStyle: "short",
     timeZone,
   });
   return addedAtFormat.format(new Date(isoTimestamp));
