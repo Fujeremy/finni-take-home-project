@@ -6,14 +6,17 @@
 |---|---|
 | A. Foundation | **Complete** — approved after Fujeremy/finni-take-home-project#1–#3 merged |
 | B. Core workflow | **Complete** — approved after Fujeremy/finni-take-home-project#4–#7 merged |
-| C. Polish and verify | Implemented — awaiting C2 review and milestone approval |
+| C. Polish and verify | **Complete** — approved after Fujeremy/finni-take-home-project#8–#9 merged |
 
-## Current milestone: C. Polish and verify
+All planned milestones are complete; the take-home is ready to submit.
 
-| PR | Branch | Scope | State |
-|---|---|---|---|
-| C1 | `polish/bundle-size` | Split the add patient dialog out of the page's first download | Merged (Fujeremy/finni-take-home-project#8) |
-| C2 | `polish/readme-verification` | Final README (§11) and the §9 manual checklist on a fresh clone | Committed locally (2 commits), not pushed, awaiting review |
+## Continuous improvements
+
+Developer-requested polish after the milestones, each proposed and approved before work starts.
+
+| Work | Branch | State |
+|---|---|---|
+| 50-patient mock dataset with `db:seed` and `db:reset` | `dev/mock-patients` | In progress |
 
 ## Implemented
 
@@ -70,4 +73,4 @@ None.
 
 ## Next step
 
-Developer review of C2, then approval to push and open it, and approval of Milestone C. With that, the take-home is complete.
+Finish the mock dataset and hand off for review.
