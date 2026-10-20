@@ -17,9 +17,9 @@ Developer-requested polish after the milestones, each proposed and approved befo
 | Work | Branch | State |
 |---|---|---|
 | 50-patient mock dataset with `db:seed` and `db:reset` | `dev/mock-patients` | **Complete** — merged in Fujeremy/finni-take-home-project#10 |
-| Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | Draft PR Fujeremy/finni-take-home-project#12, awaiting review |
-| `npm start` runs the production build, with Express serving the built client | `polish/production-start` (stacked on `fix/request-errors`) | Draft PR Fujeremy/finni-take-home-project#13, awaiting review |
-| Darker backdrop behind the add patient dialog | `polish/dialog-backdrop` (stacked on `polish/production-start`) | Committed and pushed; draft PR proposed, awaiting approval |
+| Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | **Complete** — merged in Fujeremy/finni-take-home-project#12 |
+| `npm start` runs the production build, with Express serving the built client | `polish/production-start` | **Complete** — merged in Fujeremy/finni-take-home-project#13 |
+| Darker backdrop behind the add patient dialog | `polish/dialog-backdrop` | Draft PR, awaiting review |
 
 ## Implemented
 
@@ -33,7 +33,7 @@ Developer-requested polish after the milestones, each proposed and approved befo
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
-- **Current totals (2026-10-20, `polish/production-start`):** 45 shared, 33 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
+- **Current totals (2026-10-20, `main` after #13):** 45 shared, 33 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
 - **Request errors:** each new server test was seen failing before its fix. With curl against the running API: `GET /api/nope` → 404 JSON, `[]` → 400 `INVALID_JSON`, `text/plain` → 415, a 200 KB body → 413, and a POST with no body still lists each missing field.
 - **Stale directory:** in the browser at 1440px with the 50 mock patients, stopping the API and returning to the tab kept all 50 rows and showed the refresh banner with Retry.
 - **Production start:** `npm start` built everything and served the page (200 HTML), the patient list, and the JSON 404 from port 3001. In the browser at that address, adding a patient showed the toast and put the patient first in the table.
@@ -85,4 +85,4 @@ Found in a pre-submission review (2026-10-20); each needs a developer decision b
 
 ## Next step
 
-Developer review of draft PRs #11–#13, merged in that order. Then review of the darker dialog backdrop on `polish/dialog-backdrop`. One-line table rows with hover for shortened text are proposed and awaiting approval.
+Developer review of the darker dialog backdrop PR. Then one-line table rows with hover for shortened text, which are proposed and awaiting approval.
