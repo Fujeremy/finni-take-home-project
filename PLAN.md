@@ -75,18 +75,19 @@ Search, filter, and sort the loaded list in the browser; the API is unchanged.
   shows every status. The trigger shows “All statuses”, one or two
   status labels, or “3 statuses”; its accessible name starts with
   “Status:”.
+- While any status is checked, show an X at the right edge of the
+  status filter, labeled “Clear status filter”. It unchecks every
+  status at once and moves focus to the status filter. The search box
+  clears with its own × or Escape.
 - Apply search and status filter together.
 - Use a dropdown menu with one choice for sorting, shown as
   “Sort: <choice>”: Recently added (default, the §7 order), Oldest
   added (the reverse), Last name A–Z, and Last name Z–A. Name sorts
   compare last, then first, then middle name, ignoring case and
   accents; equal names keep the §7 order. Sorting applies to the
-  filtered list, is not a filter, and is kept by “Clear filters”.
-- While a filter is active, show “Showing X of Y patients” in a polite
-  live region and a “Clear filters” button that resets both and returns
-  focus to the search box.
+  filtered list and is not a filter.
 - When nothing matches, replace the table with a message naming the
-  search and statuses, and a “Clear filters” button. Keep it distinct
+  search and statuses, and a hint to change them. Keep it distinct
   from the “No patients yet” state.
 - Keep filters and sort after a refresh failure and after adding a
   patient; reset them when the page is reloaded.
@@ -313,15 +314,15 @@ Cover meaningful behavior:
   and requires every typed word to match.
 - The status filter shows only the checked statuses, with counts and a
   trigger label naming the selection.
-- Search and status filter combine; Clear filters restores every patient
-  and returns focus to the search box.
+- Search and status filter combine; clearing the search box, or the
+  status filter with its X, shows those patients again, and the X moves
+  focus to the status filter.
 - No matches shows a distinct message; the toolbar is hidden while
   loading, on load failure, and when no patients are saved.
 - Sort starts at Recently added; Last name sorts order by last, first,
   then middle name, ignoring case and accents, keeping equal names in
   API order; Oldest added reverses the API order.
-- Sorting applies to the filtered list, does not show the result count,
-  and is kept by Clear filters.
+- Sorting applies to the filtered list.
 - The pager shows 25 patients at first; Previous and Next move between
   pages and are disabled at the ends; choosing another page size
   changes how many rows show.
