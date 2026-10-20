@@ -51,7 +51,7 @@ function optionalText(fieldLabel: string, maxLength: number) {
     });
 }
 
-const EARLIEST_DATE_OF_BIRTH = "1900-01-01";
+export const EARLIEST_DATE_OF_BIRTH = "1900-01-01";
 const INVALID_DATE_MESSAGE = "Enter a valid date of birth.";
 
 // Rejects dates like 2025-02-30 that match the format but don't exist.
@@ -68,7 +68,7 @@ function isRealCalendarDate(isoDate: string): boolean {
 
 // Today's date where the code runs: the browser on the client, the server's clock on the server.
 // See KNOWN_LIMITATIONS.md for the shared-timezone assumption.
-function localDateToday(): string {
+export function localDateToday(): string {
   const now = new Date();
   const year = String(now.getFullYear());
   const month = String(now.getMonth() + 1).padStart(2, "0");

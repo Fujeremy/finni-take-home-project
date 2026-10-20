@@ -95,8 +95,8 @@ describe("PatientDirectory", () => {
     renderDirectory();
 
     const emptyState = await screen.findByRole("region", { name: "No patients yet" });
-    expect(within(emptyState).getByText("Patients you add will appear here.")).toBeInTheDocument();
-    expect(within(emptyState).getByRole("button", { name: "Add patient" })).toBeDisabled();
+    expect(emptyState).toHaveTextContent("Patients you add will appear here. Use Add patient to add the first one.");
+    expect(within(emptyState).queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
