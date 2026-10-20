@@ -127,15 +127,15 @@ describe("PatientDirectory", () => {
     const fullName = await screen.findByText("Jordan Lee Rivera");
 
     await user.hover(fullName);
-    // The search box, Status button, and Sort button are the only Tab stops; the next Tab
-    // passes over the table to the page.
+    // The search box, Status button, and Sort button come first; the next Tab passes over
+    // the table to the pager below it.
     await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
-    expect(document.body).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Rows per page: 25" })).toHaveFocus();
   });
 
   it("shows the birth date as the same day for a viewer behind UTC", async () => {
@@ -543,6 +543,145 @@ describe("PatientDirectory", () => {
 
       expect(screen.getByRole("button", { name: "Sort: Last name A–Z" })).toBeInTheDocument();
       expect(patientNamesInTableOrder()).toEqual(["Avery Chen", "Jordan Lee Rivera", "Sam Rivers"]);
+    });
+  });
+  describe("pagination", () => {
+    // 30 fictional patients in the API's newest-first order: Patient 01 through Patient 30.
+    const thirtyPatients: Patient[] = Array.from({ length: 30 }, (_, index) => {
+      const patientNumber = String(index + 1).padStart(2, "0");
+      return {
+        ...savedPatient,
+        id: `00000000-0000-4000-8000-0000000001${patientNumber}`,
+        firstName: "Patient",
+        middleName: null,
+        lastName: patientNumber,
+      };
+    });
+
+    function patientNamesOnPage(): string[] {
+      const [, ...patientRows] = screen.getAllByRole("row");
+      return patientRows.map((row) => within(row).getAllByRole("cell")[0]!.textContent ?? "");
+    }
+
+    it("shows the first 25 patients with their range, and Previous unavailable", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+
+      renderDirectory();
+
+      expect(await screen.findByText("1–25 of 30")).toBeInTheDocument();
+      const namesOnPage = patientNamesOnPage();
+      expect(namesOnPage).toHaveLength(25);
+      expect(namesOnPage[0]).toBe("Patient 01");
+      expect(namesOnPage[24]).toBe("Patient 25");
+      expect(screen.getByRole("button", { name: "Rows per page: 25" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Previous" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "Next" })).toHaveAttribute("aria-disabled", "false");
+    });
+
+    it("shows the remaining patients after Next, keeping focus on Next now that it is unavailable", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      const nextButton = await screen.findByRole("button", { name: "Next" });
+
+      await user.click(nextButton);
+
+      expect(screen.getByText("26–30 of 30")).toBeInTheDocument();
+      expect(patientNamesOnPage()).toEqual(["Patient 26", "Patient 27", "Patient 28", "Patient 29", "Patient 30"]);
+      expect(nextButton).toHaveAttribute("aria-disabled", "true");
+      expect(nextButton).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Previous" })).toHaveAttribute("aria-disabled", "false");
+    });
+
+    it("stays on the last page when Next is pressed there", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      const nextButton = await screen.findByRole("button", { name: "Next" });
+      await user.click(nextButton);
+
+      await user.click(nextButton);
+
+      expect(screen.getByText("26–30 of 30")).toBeInTheDocument();
+    });
+
+    it("goes back to the first page with Previous", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Next" }));
+
+      await user.click(screen.getByRole("button", { name: "Previous" }));
+
+      expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
+      expect(patientNamesOnPage()[0]).toBe("Patient 01");
+    });
+
+    it("shows every patient on one page after choosing 50 rows, with both buttons unavailable", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+
+      await user.click(await screen.findByRole("button", { name: "Rows per page: 25" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "50" }));
+
+      expect(screen.getByRole("button", { name: "Rows per page: 50" })).toBeInTheDocument();
+      expect(screen.getByText("1–30 of 30")).toBeInTheDocument();
+      expect(patientNamesOnPage()).toHaveLength(30);
+      expect(screen.getByRole("button", { name: "Previous" })).toHaveAttribute("aria-disabled", "true");
+      expect(screen.getByRole("button", { name: "Next" })).toHaveAttribute("aria-disabled", "true");
+    });
+
+    it("returns to the first page when the search changes", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Next" }));
+
+      await user.type(screen.getByRole("searchbox", { name: "Search patients by name" }), "patient");
+
+      expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
+    });
+
+    it("returns to the first page when the sort changes", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Next" }));
+
+      await user.click(screen.getByRole("button", { name: "Sort: Recently added" }));
+      await user.click(screen.getByRole("menuitemradio", { name: "Last name Z–A" }));
+
+      expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
+      expect(patientNamesOnPage()[0]).toBe("Patient 30");
+    });
+
+    it("shows the last page that still exists when a refresh removes patients", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(jsonResponse(thirtyPatients))
+        .mockResolvedValueOnce(jsonResponse(thirtyPatients.slice(0, 20)));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Next" }));
+
+      // Returning to the browser tab makes TanStack Query refresh the list.
+      act(() => {
+        window.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      expect(await screen.findByText("1–20 of 20")).toBeInTheDocument();
+      expect(patientNamesOnPage()).toHaveLength(20);
+    });
+
+    it("hides the pager when no patients match", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "zed");
+
+      expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /^Rows per page/ })).not.toBeInTheDocument();
     });
   });
 });
