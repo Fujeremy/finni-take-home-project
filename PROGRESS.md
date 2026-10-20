@@ -6,30 +6,42 @@
 |---|---|
 | A. Foundation | **Complete** — approved after Fujeremy/finni-take-home-project#1–#3 merged |
 | B. Core workflow | **Complete** — approved after Fujeremy/finni-take-home-project#4–#7 merged |
-| C. Polish and verify | In progress — proposal approved: 2 PRs |
+| C. Polish and verify | Implemented — awaiting C2 review and milestone approval |
 
 ## Current milestone: C. Polish and verify
 
 | PR | Branch | Scope | State |
 |---|---|---|---|
-| C1 | `polish/bundle-size` | Split the add patient dialog out of the page's first download | Committed locally (2 commits), not pushed, awaiting review |
-| C2 | `polish/readme-verification` | Final README (§11) and the §9 manual checklist on a fresh clone | Not started |
-
-Screen-reader review: the developer will run through the app and report issues in chat; fixes land before C2's final verification.
+| C1 | `polish/bundle-size` | Split the add patient dialog out of the page's first download | Merged (Fujeremy/finni-take-home-project#8) |
+| C2 | `polish/readme-verification` | Final README (§11) and the §9 manual checklist on a fresh clone | Committed locally (2 commits), not pushed, awaiting review |
 
 ## Implemented
 
 - **Data and API:** Postgres 17 (Docker Compose) with separate dev and test databases; `patients` table per PLAN.md §6 via the Knex CLI. Express API: `GET /api/health`, `GET /api/patients` (newest first, birth dates as stored `YYYY-MM-DD`, `createdAt` in UTC), and `POST /api/patients` (validated by the shared schema; 400 `VALIDATION_ERROR` with `fieldErrors`, 400 `INVALID_JSON`). Unexpected failures return a generic JSON 500.
 - **Shared:** `createPatientSchema` with every field rule from PLAN.md §6, and the `Patient` response type built from it.
 - **Client:** patient directory (loading, error with Retry, empty state pointing to the header button, and a table with name, birth date, status badge, full address, and added time). Add patient dialog: grouped fields, validation when a field is left and on Save, reserved space for errors, server field errors beside fields, values kept on failure, saving state, discard confirmation, toast naming the patient, and focus returned to Add patient.
-- **Docs:** README setup steps verified from a fresh clone (Foundation).
+- **Docs:** final README per PLAN.md §11, verified from a fresh clone (C2).
 
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
 - **Current totals:** 45 shared, 20 server, and 28 client tests pass.
 - **C1:** the production build splits into a 332 KB main file (105 KB gzipped) and a 231 KB dialog file, with no size warning. In the browser, the page loads the main file first and the dialog file right after; the first open takes about 44ms. Loading the dialog only on first open was tried and rejected: React's Suspense reveal made that first open take about 334ms.
-- **Not yet verified:** a real screen reader (pending the developer's review); the §9 checklist in one pass on a fresh clone (C2).
+- **Screen reader:** the developer reviewed the app with a screen reader (2026-10-20) and found nothing to fix.
+- **§9 manual checklist (2026-10-20):** run in one pass on a fresh clone of `polish/readme-verification` with a fresh database, following the README. All passed:
+
+  | Check | Result |
+  |---|---|
+  | Follow the README from a clean checkout | Install, `.env`, Compose (both databases), migrate, `npm test` (45 + 20 + 28), typecheck, lint, and build all passed; the app started with an empty directory |
+  | Create a patient with every field populated | Saved with status Onboarding; toast named the patient; every field shown, country `ca` saved as `CA` |
+  | Create a patient without optional fields | Saved with a leap-day birth date and an accented city; optional fields stored as null; status defaulted to Inquiry |
+  | Refresh and confirm all saved values remain | Table text and API data for all three patients (13 fields each) identical before and after reload |
+  | Long names and addresses | A patient at every field's maximum length saved; values wrap inside their cells; the dialog showed no errors and no sideways scroll |
+  | Complete the form using a keyboard | Opened, filled every field (including the date and status select), and saved with the keyboard only; focus returned to Add patient |
+  | Desktop layouts, including 1440px | No horizontal scroll at 1440px or 1280px, for the page, the table, or the dialog |
+  | Useful feedback when the API is unavailable | Directory showed "Patients couldn't be loaded." with Retry; saving showed "The patient wasn't saved." and kept every value; after restarting the API, clicking Retry loaded the list |
+
+- **Not verified:** behavior on a slow network (all measurements were local).
 
 ## Decisions made
 
@@ -58,4 +70,4 @@ None.
 
 ## Next step
 
-Developer review of C1, then approval to push and open it. Meanwhile, the developer's screen-reader feedback; then C2 (final README and §9 checklist).
+Developer review of C2, then approval to push and open it, and approval of Milestone C. With that, the take-home is complete.
