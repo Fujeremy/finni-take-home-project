@@ -140,6 +140,11 @@ function NoMatchingPatients({ message, onClearFilters }: { message: string; onCl
   );
 }
 
+// The status and sort buttons look like select boxes: a fixed width, matching the search
+// box's height, with the label on the left and the chevron on the right. Their menus
+// take the button's width.
+const MENU_TRIGGER_CLASSES = "h-10 w-56 justify-between font-normal";
+
 function describeStatusSelection(selectedStatuses: PatientStatus[]): string {
   if (selectedStatuses.length === 0) {
     return "All statuses";
@@ -176,12 +181,12 @@ function StatusFilter({ patients, selectedStatuses, onSelectedStatusesChange }: 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {/* The visible label is just the selection; screen readers also hear what it filters. */}
-        <Button variant="outline" aria-label={`Status: ${selectionLabel}`}>
-          {selectionLabel}
+        <Button variant="outline" aria-label={`Status: ${selectionLabel}`} className={MENU_TRIGGER_CLASSES}>
+          <span className="truncate">{selectionLabel}</span>
           <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
+      <DropdownMenuContent>
         {STATUS_FILTER_OPTIONS.map((status) => {
           const statusLabel = PATIENT_STATUS_LABELS[status];
           // Counts cover every patient, so they don't change while the provider types a search.
@@ -222,12 +227,12 @@ function SortMenu({ sortOrder, onSortOrderChange }: SortMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          Sort: {PATIENT_SORT_LABELS[sortOrder]}
+        <Button variant="outline" className={MENU_TRIGGER_CLASSES}>
+          <span className="truncate">Sort: {PATIENT_SORT_LABELS[sortOrder]}</span>
           <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
+      <DropdownMenuContent>
         <DropdownMenuRadioGroup value={sortOrder} onValueChange={chooseSortOrder}>
           {PATIENT_SORT_ORDERS.map((sortOption) => (
             <DropdownMenuRadioItem key={sortOption} value={sortOption}>
@@ -270,30 +275,6 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {/* A fixed width keeps the search box and the menu in place as the status label changes. */}
-          <div className="relative w-80 shrink-0">
-            <SearchIcon
-              aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              ref={searchBoxRef}
-              type="search"
-              aria-label="Search patients by name"
-              placeholder="Search by name"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <StatusFilter
-            patients={patients}
-            selectedStatuses={selectedStatuses}
-            onSelectedStatusesChange={setSelectedStatuses}
-          />
-          <SortMenu sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
-        </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {/* Always rendered so screen readers announce the count as it changes. */}
           <p role="status" className="tabular-nums">
@@ -305,6 +286,29 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
               Clear filters
             </Button>
           )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="relative w-80">
+            <SearchIcon
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              ref={searchBoxRef}
+              type="search"
+              aria-label="Search patients by name"
+              placeholder="Search by name"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              className="h-10 pl-8"
+            />
+          </div>
+          <StatusFilter
+            patients={patients}
+            selectedStatuses={selectedStatuses}
+            onSelectedStatusesChange={setSelectedStatuses}
+          />
+          <SortMenu sortOrder={sortOrder} onSortOrderChange={setSortOrder} />
         </div>
       </div>
       {hasMatches ? (
