@@ -21,10 +21,10 @@ Developer-requested polish after the milestones, each proposed and approved befo
 | `npm start` runs the production build, with Express serving the built client | `polish/production-start` | **Complete** — merged in Fujeremy/finni-take-home-project#13 |
 | Darker backdrop behind the add patient dialog | `polish/dialog-backdrop` | **Complete** — merged in Fujeremy/finni-take-home-project#15 |
 | One-line patient rows, with the full text of shortened names and addresses on hover or focus | `polish/one-line-rows` | **Complete** — merged in Fujeremy/finni-take-home-project#16 |
-| Name search for the directory (PR 1 of 4: search, status filter, sorting, toolbar layout) | `feat/directory-name-search` | Draft PR open: Fujeremy/finni-take-home-project#17 |
-| Multi-select status filter for the directory (PR 2 of 4), stacked on PR 1 | `feat/directory-status-filter` | Draft PR open: Fujeremy/finni-take-home-project#18 |
-| Browser-side sorting for the directory (PR 3 of 4), stacked on PR 2 | `feat/directory-sorting` | Draft PR open: Fujeremy/finni-take-home-project#19 |
-| Directory header and toolbar matching the developer's reference layout (PR 4 of 4), stacked on PR 3 | `polish/directory-toolbar-layout` | Committed (2 commits); PR to be proposed |
+| Name search for the directory (PR 1 of 4: search, status filter, sorting, toolbar layout) | `feat/directory-name-search` | **Complete** — merged in Fujeremy/finni-take-home-project#17 |
+| Multi-select status filter for the directory (PR 2 of 4), stacked on PR 1 | `feat/directory-status-filter` | Approved and merged into PR 1's branch in Fujeremy/finni-take-home-project#18; reaches `main` through the follow-up PR from `feat/directory-sorting` |
+| Browser-side sorting for the directory (PR 3 of 4), stacked on PR 2 | `feat/directory-sorting` | Approved and merged into PR 2's branch in Fujeremy/finni-take-home-project#19; reaches `main` through the follow-up PR from `feat/directory-sorting` |
+| Directory header and toolbar matching the developer's reference layout (PR 4 of 4), stacked on PR 3 | `polish/directory-toolbar-layout` | Approved and merged into PR 3's branch in Fujeremy/finni-take-home-project#20; reaches `main` through the follow-up PR from `feat/directory-sorting` |
 
 ## Implemented
 
@@ -100,4 +100,4 @@ Found in a pre-submission review (2026-10-20); each needs a developer decision b
 
 ## Next step
 
-Developer review of draft PRs #17 (name search), #18 (status filter), and #19 (sorting), and of the PR proposal for `polish/directory-toolbar-layout` (PR 4 of 4, based on PR 3's branch). After each PR merges, the next one's base moves to `main`. Then the local backup stash and the unused `feat/directory-search-filter` branch can be removed, with developer approval.
+Developer review and merge of the follow-up PR from `feat/directory-sorting` into `main`. PRs #18–#20 were merged into the stacked branches below them instead of `main`, so that PR carries their approved commits, unchanged, into `main`. Afterward, with developer approval, remove the local backup stash and the stacked branches (`feat/directory-search-filter`, `feat/directory-name-search`, `feat/directory-status-filter`, `feat/directory-sorting`, `polish/directory-toolbar-layout`).
