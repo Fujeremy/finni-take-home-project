@@ -111,7 +111,11 @@ export const createPatientSchema = z.object({
   ),
   addressLine2: optionalText("Address line 2", PATIENT_FIELD_MAX_LENGTHS.addressLine2),
   city: requiredText("Enter a city.", "City", PATIENT_FIELD_MAX_LENGTHS.city),
-  region: requiredText("Enter a region.", "Region", PATIENT_FIELD_MAX_LENGTHS.region),
+  region: requiredText(
+    "Enter a province or state.",
+    "Province or state",
+    PATIENT_FIELD_MAX_LENGTHS.region,
+  ),
   postalCode: requiredText(
     "Enter a postal code.",
     "Postal code",
