@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "tsc -b",
+    "dev": "tsc -b --watch --preserveWatchOutput",
     "typecheck": "tsc -p tsconfig.test.json",
     "test": "vitest run"
   },

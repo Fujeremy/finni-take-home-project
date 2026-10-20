@@ -13,7 +13,8 @@
     "build": "npm run build --workspaces --if-present",
     "db:migrate": "npm run db:migrate -w server",
     "dev:server": "npm run build:shared && npm run dev -w server",
-    "dev:client": "npm run build:shared && npm run dev -w client"
+    "dev:client": "npm run build:shared && npm run dev -w client",
+    "dev:shared": "npm run dev -w shared"
   },
   "workspaces": [
     "shared",

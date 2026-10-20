@@ -12,10 +12,15 @@
 
 | PR | Branch | Scope | State |
 |---|---|---|---|
-| B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | In progress |
+| B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Committed locally (6 commits), not pushed, awaiting review |
 | B2 | `core/patients-api` | `GET` and `POST /api/patients` | Not started |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Not started |
 | B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Not started |
+
+## Implemented (Milestone B so far)
+
+- `createPatientSchema` in `@finni/shared`: trimmed text, required fields, blank optional fields as null, length limits, required status, uppercase two-letter country codes, and birth dates from 1900-01-01 through the local date today. `CreatePatientInput` and `CreatePatientData` types are inferred from it.
+- `npm run dev:shared` rebuilds the shared package on change.
 
 ## Implemented (Foundation)
 
@@ -29,7 +34,12 @@
 
 Foundation: 5 server tests, typecheck, lint, build, browser checks through the proxy, and README from a fresh clone (see PRs #1–#3).
 
-Milestone B: nothing run yet.
+B1 (2026-10-20, each commit in its own state):
+- `npm test`: 45 shared schema tests and 5 server tests pass. The local-date test fails when "today" is computed in UTC.
+- `npm run typecheck`, `npm run lint`, `npm run build`: passed.
+- `npm run dev:shared` rebuilt `shared/dist` after a source edit and after reverting it.
+
+Not yet verified: the API and client reloading on shared changes (nothing imports the schema until B2 and B4).
 
 ## Decisions made
 
@@ -46,4 +56,4 @@ Milestone B: nothing run yet.
 
 ## Next step
 
-Finish B1 and hand off for review.
+Developer review of B1, then approval to push and open it. After that, B2 (`core/patients-api`): `GET` and `POST /api/patients`.
