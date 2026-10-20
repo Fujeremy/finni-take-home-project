@@ -18,6 +18,7 @@ Included functionality and optional enhancements are defined in
 | Archiving and restoring | Patients cannot be archived, hidden through an archive workflow, or restored. The Churned status is a patient status, not an archive mechanism. |
 | Hard deletion | Patients cannot be permanently deleted through the UI or API. |
 | Address validity checks | No verification that an address exists or is deliverable, ISO country-code membership checks, country-specific postal code/region validation, address lookup, or autocomplete. Input validation rules are defined in PLAN.md §4. |
+| Canada/US address controls | Deferred until requested. Would add country and region dropdowns, country-specific postal validation, and corresponding schema, migration, and documentation changes. |
 | Authentication and authorization | No sign-in, user roles, or access controls. The application represents one provider workspace without provider-specific data isolation. |
 | Audit history | No activity log or record history showing who created, viewed, or changed patient information. |
 | Duplicate detection and merging | No duplicate warnings or patient merging. |
