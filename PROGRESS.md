@@ -17,8 +17,9 @@ Developer-requested polish after the milestones, each proposed and approved befo
 | Work | Branch | State |
 |---|---|---|
 | 50-patient mock dataset with `db:seed` and `db:reset` | `dev/mock-patients` | **Complete** — merged in Fujeremy/finni-take-home-project#10 |
-| Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | Committed locally (6 commits), not pushed, awaiting review |
-| `npm start` runs the production build, with Express serving the built client | `polish/production-start` (stacked on `fix/request-errors`) | Committed locally (3 commits), not pushed, awaiting review |
+| Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | **Complete** — merged in Fujeremy/finni-take-home-project#12 |
+| `npm start` runs the production build, with Express serving the built client | `polish/production-start` | **Complete** — merged in Fujeremy/finni-take-home-project#13 |
+| Darker backdrop behind the add patient dialog | `polish/dialog-backdrop` | Draft PR, awaiting review |
 
 ## Implemented
 
@@ -32,7 +33,7 @@ Developer-requested polish after the milestones, each proposed and approved befo
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
-- **Current totals (2026-10-20, `polish/production-start`):** 45 shared, 33 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
+- **Current totals (2026-10-20, `main` after #13):** 45 shared, 33 server, and 30 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
 - **Request errors:** each new server test was seen failing before its fix. With curl against the running API: `GET /api/nope` → 404 JSON, `[]` → 400 `INVALID_JSON`, `text/plain` → 415, a 200 KB body → 413, and a POST with no body still lists each missing field.
 - **Stale directory:** in the browser at 1440px with the 50 mock patients, stopping the API and returning to the tab kept all 50 rows and showed the refresh banner with Retry.
 - **Production start:** `npm start` built everything and served the page (200 HTML), the patient list, and the JSON 404 from port 3001. In the browser at that address, adding a patient showed the toast and put the patient first in the table.
@@ -61,7 +62,7 @@ Developer-requested polish after the milestones, each proposed and approved befo
 - Birth dates: 1900-01-01 through today, checked against each side's local date with no timezone header (PLAN.md §6, KNOWN_LIMITATIONS.md).
 - Directory shows an "Added" column; dates display like "Mar 14, 1988". The empty state points to the header's Add patient button (PLAN.md §4).
 - Dialog: Radix Select for status; region labelled "Province or state"; fields validated when left (`onTouched`) and on Save; no `maxLength`, so over-limit text is flagged rather than cut off; each field reserves one line for its error and length messages read "100 characters max."; opening focuses the dialog itself; invalid fields get a soft red border with the glow only on keyboard focus; asks before discarding entries; closing blocked while saving.
-- Generated shadcn edits: Sonner uses the light theme instead of next-themes; Dialog and AlertDialog have no backdrop blur or zoom, because redrawing the blur made typing laggy. Light theme only (KNOWN_LIMITATIONS.md).
+- Generated shadcn edits: Sonner uses the light theme instead of next-themes; Dialog and AlertDialog have no backdrop blur or zoom, because redrawing the blur made typing laggy. The Dialog backdrop is 50% black instead of 10% so the open dialog stands out; the AlertDialog backdrop stays at 10% because it only opens on top of the darkened Dialog. Light theme only (KNOWN_LIMITATIONS.md).
 - Client bundle: the add patient dialog is a separate file that starts loading right after the page renders, so the page's first download is smaller without slowing the first open.
 - Pins: TypeScript 6.0 (typescript-eslint doesn't support 7.x); `@hookform/resolvers` 5.2 (6.x has unresolvable optional peers).
 - `npm audit`: 7 high findings from one `braces` advisory in the `shadcn` CLI's tooling. Not reachable at runtime and not in the bundle; no patched `braces` exists. Developer decision: neither fix nor document.
@@ -84,4 +85,4 @@ Found in a pre-submission review (2026-10-20); each needs a developer decision b
 
 ## Next step
 
-Developer review of `fix/request-errors` and `polish/production-start`, then approval to push them and open their PRs.
+Developer review of the darker dialog backdrop PR. Then one-line table rows with hover for shortened text, which are proposed and awaiting approval.
