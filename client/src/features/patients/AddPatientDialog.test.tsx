@@ -89,6 +89,49 @@ describe("Add patient dialog", () => {
     expect(firstNameInput).toHaveAttribute("aria-invalid", "false");
   });
 
+  it("flags an invalid country code as soon as the provider leaves the field, before any save", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
+    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const countryInput = within(dialog).getByLabelText("Country code");
+
+    await user.type(countryInput, "CAN");
+    await user.tab();
+
+    expect(countryInput).toHaveAccessibleDescription("Two letters, e.g. CA Enter a two-letter country code, e.g. CA.");
+    expect(postRequestCount()).toBe(0);
+  });
+
+  it("updates a field's error while the provider corrects it after leaving", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
+    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const countryInput = within(dialog).getByLabelText("Country code");
+    await user.type(countryInput, "C");
+    await user.tab();
+    expect(countryInput).toHaveAttribute("aria-invalid", "true");
+
+    await user.type(countryInput, "A");
+
+    expect(countryInput).toHaveAccessibleDescription("Two letters, e.g. CA");
+    expect(countryInput).toHaveAttribute("aria-invalid", "false");
+  });
+
+  it("leaves fields the provider hasn't visited unflagged", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
+    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+
+    await user.type(within(dialog).getByLabelText("City"), "Springfield");
+    await user.tab();
+
+    expect(within(dialog).getByLabelText("Last name")).not.toHaveAccessibleDescription();
+    expect(within(dialog).getByLabelText("Postal code")).not.toHaveAccessibleDescription();
+  });
+
   it("keeps pasted text over the limit and shows a length error instead of cutting it off", async () => {
     const user = userEvent.setup();
     renderApp();

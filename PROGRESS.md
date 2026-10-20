@@ -15,7 +15,7 @@
 | B1 | `core/shared-validation` | `createPatientSchema` in shared, birth-date rules, shared watch build | Merged (Fujeremy/finni-take-home-project#4) |
 | B2 | `core/patients-api` | `GET` and `POST /api/patients` | Merged (Fujeremy/finni-take-home-project#5) |
 | B3 | `core/directory` | Patient directory table with loading, empty, and error states | Merged (Fujeremy/finni-take-home-project#6) |
-| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Committed locally (6 commits), not pushed, awaiting review |
+| B4 | `core/add-patient` | Add patient dialog with validation, saving, and discard confirmation | Draft PR open (Fujeremy/finni-take-home-project#7), 8 commits, awaiting review |
 
 ## Implemented (Milestone B so far)
 
@@ -26,7 +26,7 @@
 - `Patient` response type defined once in shared from the schema; the insert is typed as a full row.
 - Client tests: Vitest with jsdom and Testing Library; tests typechecked by `client/tsconfig.test.json`.
 - Patient directory replaces the connection check: loading, error with Retry, empty state, and a table with name, birth date, status badge, full address, and added time.
-- Add patient dialog, opened from the header's Add patient button: fields grouped into name, patient details, and address; validated with the shared schema; errors under each field; server field errors placed beside fields; other failures shown above the buttons; values kept on failure; "Saving…" blocks a second save and closing; on success the directory reloads, a toast names the patient, and focus returns to the Add patient button. Closing with entries asks "Discard this patient?".
+- Add patient dialog, opened from the header's Add patient button: fields grouped into name, patient details, and address; validated with the shared schema when a field is left, then live as it is corrected, and all at once on Save; errors under each field; server field errors placed beside fields; other failures shown above the buttons; values kept on failure; "Saving…" blocks a second save and closing; on success the directory reloads, a toast names the patient, and focus returns to the Add patient button. Closing with entries asks "Discard this patient?".
 
 ## Implemented (Foundation)
 
@@ -61,12 +61,13 @@ Not yet verified:
 - The client reloading on shared changes: verified in B4.
 
 B4 (2026-10-20, each commit in its own state):
-- `npm test`: 45 shared, 20 server, and 24 client tests pass. Mutations confirmed: allowing close while saving, skipping the directory reload, and skipping the discard prompt each fail tests.
+- `npm test`: 45 shared, 20 server, and 26 client tests pass. Mutations confirmed: allowing close while saving, skipping the directory reload, and skipping the discard prompt each fail tests.
 - `npm run typecheck`, `npm run lint`, `npm run build`: passed. The build warns that the client bundle is 562 KB (175 KB gzipped), over Vite's 500 KB guideline.
 - Browser, keyboard only: opened the dialog, submitted empty (every required field flagged, focus on First name), filled every field including the date and the Radix status select, saved; dialog closed, toast "Avery Jo Chen was added.", country saved as CA, focus returned to Add patient. The patient remained after refresh.
 - Browser: Escape with entries asked to discard; Keep editing kept values; Discard closed without saving. With the API stopped, saving showed "The patient wasn't saved." and kept every value; after restarting the API, saving again succeeded.
 - With `dev:shared` and `dev:client` running, a changed shared message appeared in the form without a restart.
 - Test patients were deleted afterward.
+- Validation on leaving a field: switching back to checking only on Save makes the two leave-the-field tests fail.
 
 Not yet verified: a real screen reader (labels, descriptions, and roles were checked in tests and the browser only).
 
@@ -79,11 +80,21 @@ Not yet verified: a real screen reader (labels, descriptions, and roles were che
 - Status uses shadcn's Radix Select; closing the dialog with entered values asks first; closing is blocked while saving.
 - Form layout groups short fields side by side; region is labelled "Province or state"; the toast names the patient.
 - Inputs have no maxLength: over-limit text is kept and flagged rather than silently cut off.
+- Fields are validated when the provider leaves them (`onTouched`), then live as they are corrected; Save checks every field.
 - `@hookform/resolvers` is pinned to 5.2 because 6.x lists optional peers npm cannot resolve together.
 - Light theme only (KNOWN_LIMITATIONS.md); the Sonner component is edited to drop next-themes.
 - The empty state points to the header's Add patient button instead of repeating it (PLAN.md §4 updated).
 - Dialog and AlertDialog overlays have no backdrop blur and no zoom animation (quick fade only): redrawing the full-page blur made typing in the dialog feel laggy.
 - TypeScript is pinned to 6.0 because typescript-eslint does not support 7.x yet.
+
+## Deferred
+
+- **Canada and US addresses** (developer decision, 2026-10-20; implement only when asked, likely as its own PR):
+  - Country becomes a required dropdown (Canada, United States) with no default; saving without one shows "Choose a country."
+  - Province or state becomes a dropdown that depends on the country (13 provinces and territories, or 50 states plus DC).
+  - Country moves to the top of the Address group; Province or state and Postal code stay visible but disabled with a "Choose a country first" hint until a country is chosen. Changing the country clears the region and rechecks the postal code.
+  - Postal code format: Canada `A1A 1A1` (saved uppercase with one space); US `12345` or `12345-6789`. The label switches between Postal code and ZIP code.
+  - Needs PLAN.md §6 and KNOWN_LIMITATIONS.md updates and a new migration narrowing the country check to CA and US.
 
 ## Open questions
 

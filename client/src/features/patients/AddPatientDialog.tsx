@@ -152,7 +152,9 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
   const form = useForm<CreatePatientInput, unknown, CreatePatientData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: EMPTY_PATIENT_FORM,
-    mode: "onSubmit",
+    // Check a field when the provider leaves it, then again on every change so the error
+    // updates while they correct it. Save still checks every field at once.
+    mode: "onTouched",
     reValidateMode: "onChange",
   });
   // A failure that isn't about one field, such as a server error or no connection.
