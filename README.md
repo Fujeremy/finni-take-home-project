@@ -91,11 +91,27 @@ through the server workspace, for example:
 npm run knex -w server -- migrate:status
 ```
 
-To clear all patients from the development database:
+### Mock data
+
+To fill the directory with 50 fictional patients that exercise edge cases (names and
+addresses at their length limits, names with accents and non-Latin scripts, optional
+fields present and absent, the earliest and latest birth dates, and Canadian and US
+postal formats; every address is in Canada or the US):
 
 ```bash
-docker compose exec db psql -U finni -d finni_dev -c "delete from patients;"
+npm run db:seed
 ```
+
+This replaces every patient in the development database, so each run starts from
+the same 50. To empty the directory again:
+
+```bash
+npm run db:reset
+```
+
+Both commands only touch the development database; tests use their own. The records
+live in `server/src/db/mockPatients.ts`, and each one must pass the app's validation
+before it is saved.
 
 ## Project layout
 
