@@ -424,6 +424,31 @@ describe("PatientDirectory", () => {
       expect(noMatches).toHaveTextContent("Change the search or statuses to see more patients.");
     });
 
+    it("unchecks every status with the X and moves focus to the Status button", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
+      await user.keyboard("{Escape}");
+
+      await user.click(screen.getByRole("button", { name: "Clear status filter" }));
+
+      expect(screen.getByRole("button", { name: "Status: All statuses" })).toHaveFocus();
+      expect(screen.getAllByRole("row")).toHaveLength(4);
+      expect(screen.queryByRole("button", { name: "Clear status filter" })).not.toBeInTheDocument();
+    });
+
+    it("shows no X while every status is shown", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+
+      renderDirectory();
+
+      expect(await screen.findByRole("button", { name: "Status: All statuses" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Clear status filter" })).not.toBeInTheDocument();
+    });
+
     it("explains an empty result when only statuses are checked", async () => {
       const user = userEvent.setup();
       vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
@@ -616,6 +641,21 @@ describe("PatientDirectory", () => {
 
       expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
       expect(patientNamesOnPage()[0]).toBe("Patient 30");
+    });
+
+    it("returns to the first page when the status filter is cleared with its X", async () => {
+      const user = userEvent.setup();
+      // Every patient in the list is Active, so checking Active still leaves two pages.
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(thirtyPatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Active, 30 patients" }));
+      await user.keyboard("{Escape}");
+      await user.click(screen.getByRole("button", { name: "Next" }));
+
+      await user.click(screen.getByRole("button", { name: "Clear status filter" }));
+
+      expect(screen.getByText("1–25 of 30")).toBeInTheDocument();
     });
 
     it("shows the last page that still exists when a refresh removes patients", async () => {

@@ -1,6 +1,6 @@
 import type { Patient, PatientStatus } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, SearchIcon, XIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -173,38 +173,67 @@ function StatusFilter({ patients, selectedStatuses, onSelectedStatusesChange }: 
     onSelectedStatusesChange(nextStatuses);
   }
 
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
+
+  // The X disappears once clicked, so focus moves to the Status button beside it.
+  function clearStatuses() {
+    onSelectedStatusesChange([]);
+    statusButtonRef.current?.focus();
+  }
+
   const selectionLabel = describeStatusSelection(selectedStatuses);
+  const hasCheckedStatuses = selectedStatuses.length > 0;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        {/* The visible label is just the selection; screen readers also hear what it filters. */}
-        <Button variant="outline" aria-label={`Status: ${selectionLabel}`} className={MENU_TRIGGER_CLASSES}>
-          <span className="truncate">{selectionLabel}</span>
-          <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+    // The X is a separate button laid over the field's right edge, not nested inside the
+    // Status button, so each keeps its own keyboard and screen reader behavior.
+    <div className="relative">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          {/* The visible label is just the selection; screen readers also hear what it filters. */}
+          <Button
+            ref={statusButtonRef}
+            variant="outline"
+            aria-label={`Status: ${selectionLabel}`}
+            className={hasCheckedStatuses ? `${MENU_TRIGGER_CLASSES} pr-9` : MENU_TRIGGER_CLASSES}
+          >
+            <span className="truncate">{selectionLabel}</span>
+            {!hasCheckedStatuses && <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          {STATUS_FILTER_OPTIONS.map((status) => {
+            const statusLabel = PATIENT_STATUS_LABELS[status];
+            // Counts cover every patient, so they don't change while the provider types a search.
+            const patientCount = patients.filter((patient) => patient.status === status).length;
+            return (
+              <DropdownMenuCheckboxItem
+                key={status}
+                checked={selectedStatuses.includes(status)}
+                onCheckedChange={(isChecked) => setStatusChecked(status, isChecked)}
+                // Keeps the menu open so several statuses can be checked in a row.
+                onSelect={(event) => event.preventDefault()}
+                aria-label={`${statusLabel}, ${formatPatientCount(patientCount)}`}
+              >
+                {statusLabel}
+                <span className="ml-auto text-muted-foreground tabular-nums">{patientCount}</span>
+              </DropdownMenuCheckboxItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {hasCheckedStatuses && (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Clear status filter"
+          onClick={clearStatuses}
+          className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground"
+        >
+          <XIcon aria-hidden="true" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>
-        {STATUS_FILTER_OPTIONS.map((status) => {
-          const statusLabel = PATIENT_STATUS_LABELS[status];
-          // Counts cover every patient, so they don't change while the provider types a search.
-          const patientCount = patients.filter((patient) => patient.status === status).length;
-          return (
-            <DropdownMenuCheckboxItem
-              key={status}
-              checked={selectedStatuses.includes(status)}
-              onCheckedChange={(isChecked) => setStatusChecked(status, isChecked)}
-              // Keeps the menu open so several statuses can be checked in a row.
-              onSelect={(event) => event.preventDefault()}
-              aria-label={`${statusLabel}, ${formatPatientCount(patientCount)}`}
-            >
-              {statusLabel}
-              <span className="ml-auto text-muted-foreground tabular-nums">{patientCount}</span>
-            </DropdownMenuCheckboxItem>
-          );
-        })}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      )}
+    </div>
   );
 }
 
