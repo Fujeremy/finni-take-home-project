@@ -12,8 +12,7 @@ Included functionality and optional enhancements are defined in
 | Feature | Current limitation |
 |---|---|
 | Responsive design | Only desktop layouts are supported and verified. Mobile and tablet layouts are outside scope. |
-| Search scope | Search matches patient names only, not addresses, birth dates, or other fields. It runs only in the browser over the full loaded list (see Pagination); the API has no search parameters. The search resets when the page is refreshed rather than being kept in the URL. |
-| Status filtering | The directory shows all statuses without a status filter. |
+| Search and filter scope | Search matches patient names only, not addresses, birth dates, or other fields. Search and the status filter run only in the browser over the full loaded list (see Pagination); the API has no search or filter parameters. Both reset when the page is refreshed rather than being kept in the URL. |
 | Pagination | The initial directory retrieves and displays all patients in one list, without page navigation or a page-size selector. This is intended for the small demonstration dataset; performance with large datasets has not been verified. |
 | Patient updates | Saved patient information cannot be edited, including patient status. Corrections and status transitions are outside scope. |
 | Archiving and restoring | Patients cannot be archived, hidden through an archive workflow, or restored. The Churned status is a patient status, not an archive mechanism. |

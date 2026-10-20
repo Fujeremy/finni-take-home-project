@@ -57,23 +57,28 @@ button.
 
 ### Find patients
 
-Search the loaded list in the browser; the API is unchanged.
+Search and filter the loaded list in the browser; the API is unchanged.
 
 - Show a toolbar between the page header and the table with a name
-  search box. Hide it while patients load, when loading fails, and when
-  no patients are saved.
+  search box and a status filter. Hide it while patients load, when
+  loading fails, and when no patients are saved.
 - Give the search box an accessible label. Match case- and
   accent-insensitively against first, middle, and last name, ignoring
   surrounding spaces; every typed word must appear in the name.
-- Keep the §7 order for the matching patients.
-- While a search is active, show “Showing X of Y patients” in a polite
-  live region and a “Clear filters” button that empties the search and
-  returns focus to the search box.
+- Use a dropdown menu with checkable statuses for the status filter.
+  Each option shows its count across all patients. Selecting no status
+  shows every status. The trigger shows “All statuses”, one or two
+  status labels, or “3 statuses”; its accessible name starts with
+  “Status:”.
+- Apply search and status filter together, keeping the §7 order.
+- While a filter is active, show “Showing X of Y patients” in a polite
+  live region and a “Clear filters” button that resets both and returns
+  focus to the search box.
 - When nothing matches, replace the table with a message naming the
-  search and a “Clear filters” button. Keep it distinct from the
-  “No patients yet” state.
-- Keep the search after a refresh failure and after adding a patient;
-  reset it when the page is reloaded.
+  search and statuses, and a “Clear filters” button. Keep it distinct
+  from the “No patients yet” state.
+- Keep filters after a refresh failure and after adding a patient;
+  reset them when the page is reloaded.
 
 ### Add a patient
 
@@ -276,7 +281,10 @@ Cover meaningful behavior:
 - Successful submission updates the directory.
 - Name search matches any name part regardless of case and accents,
   and requires every typed word to match.
-- Clear filters restores every patient and returns focus to the search box.
+- The status filter shows only the checked statuses, with counts and a
+  trigger label naming the selection.
+- Search and status filter combine; Clear filters restores every patient
+  and returns focus to the search box.
 - No matches shows a distinct message; the toolbar is hidden while
   loading, on load failure, and when no patients are saved.
 
