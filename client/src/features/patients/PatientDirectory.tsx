@@ -1,9 +1,15 @@
 import type { Patient, PatientStatus } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
-import { SearchIcon } from "lucide-react";
+import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -24,6 +30,12 @@ import {
 } from "./patientFormatting";
 import { matchesNameSearch } from "./patientSearch";
 import { TruncatedText } from "./TruncatedText";
+
+// The statuses in their usual order, taken from the labels rather than importing
+// PATIENT_STATUSES from @finni/shared: any value imported from there brings the whole
+// shared schema and zod into the page's first download instead of the dialog's file.
+// The labels record lists every status, so this stays complete; Object.keys only loses the key type.
+const STATUS_FILTER_OPTIONS = Object.keys(PATIENT_STATUS_LABELS) as PatientStatus[];
 
 // Color supports the text label; it is never the only way to tell statuses apart.
 const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
@@ -88,13 +100,36 @@ function EmptyDirectory() {
   );
 }
 
-function NoMatchingPatients({ searchText, onClearFilters }: { searchText: string; onClearFilters: () => void }) {
+function formatPatientCount(count: number): string {
+  if (count === 1) {
+    return "1 patient";
+  }
+  return `${count} patients`;
+}
+
+// Joins status names as "Active or Churned" or "Inquiry, Onboarding, or Active".
+const statusNameList = new Intl.ListFormat("en-US", { type: "disjunction" });
+
+function describeNoMatches(searchText: string, selectedStatuses: PatientStatus[]): string {
+  const trimmedSearch = searchText.trim();
+  const statusNames = statusNameList.format(selectedStatuses.map((status) => PATIENT_STATUS_LABELS[status]));
+
+  if (selectedStatuses.length === 0) {
+    return `No patient names match “${trimmedSearch}”.`;
+  }
+  if (trimmedSearch === "") {
+    return `No patients have status ${statusNames}.`;
+  }
+  return `No patient names match “${trimmedSearch}” with status ${statusNames}.`;
+}
+
+function NoMatchingPatients({ message, onClearFilters }: { message: string; onClearFilters: () => void }) {
   return (
     <section aria-labelledby="no-matching-patients-heading" className="space-y-3 rounded-lg border p-8 text-center">
       <h2 id="no-matching-patients-heading" className="text-lg font-medium">
         No matching patients
       </h2>
-      <p className="text-muted-foreground wrap-anywhere">No patient names match “{searchText.trim()}”.</p>
+      <p className="text-muted-foreground wrap-anywhere">{message}</p>
       <Button variant="outline" onClick={onClearFilters}>
         Clear filters
       </Button>
@@ -102,45 +137,125 @@ function NoMatchingPatients({ searchText, onClearFilters }: { searchText: string
   );
 }
 
-// The search lives here rather than in PatientDirectory so it only exists once there are
-// patients to search. This component stays mounted while the list refreshes, so a refresh,
-// a failed refresh, or a newly added patient keeps the provider's search.
+function describeStatusSelection(selectedStatuses: PatientStatus[]): string {
+  if (selectedStatuses.length === 0) {
+    return "All statuses";
+  }
+  if (selectedStatuses.length >= 3) {
+    return `${selectedStatuses.length} statuses`;
+  }
+  const statusNames = selectedStatuses.map((status) => PATIENT_STATUS_LABELS[status]);
+  return statusNames.join(", ");
+}
+
+type StatusFilterProps = {
+  patients: Patient[];
+  selectedStatuses: PatientStatus[];
+  onSelectedStatusesChange: (statuses: PatientStatus[]) => void;
+};
+
+function StatusFilter({ patients, selectedStatuses, onSelectedStatusesChange }: StatusFilterProps) {
+  function setStatusChecked(changedStatus: PatientStatus, isChecked: boolean) {
+    // Rebuilding from STATUS_FILTER_OPTIONS keeps the button label in the usual status order,
+    // whatever order the statuses were checked in.
+    const nextStatuses = STATUS_FILTER_OPTIONS.filter((status) => {
+      if (status === changedStatus) {
+        return isChecked;
+      }
+      return selectedStatuses.includes(status);
+    });
+    onSelectedStatusesChange(nextStatuses);
+  }
+
+  const selectionLabel = describeStatusSelection(selectedStatuses);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        {/* The visible label is just the selection; screen readers also hear what it filters. */}
+        <Button variant="outline" aria-label={`Status: ${selectionLabel}`}>
+          {selectionLabel}
+          <ChevronDownIcon data-icon="inline-end" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+        {STATUS_FILTER_OPTIONS.map((status) => {
+          const statusLabel = PATIENT_STATUS_LABELS[status];
+          // Counts cover every patient, so they don't change while the provider types a search.
+          const patientCount = patients.filter((patient) => patient.status === status).length;
+          return (
+            <DropdownMenuCheckboxItem
+              key={status}
+              checked={selectedStatuses.includes(status)}
+              onCheckedChange={(isChecked) => setStatusChecked(status, isChecked)}
+              // Keeps the menu open so several statuses can be checked in a row.
+              onSelect={(event) => event.preventDefault()}
+              aria-label={`${statusLabel}, ${formatPatientCount(patientCount)}`}
+            >
+              {statusLabel}
+              <span className="ml-auto text-muted-foreground tabular-nums">{patientCount}</span>
+            </DropdownMenuCheckboxItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+// The filters live here rather than in PatientDirectory so they only exist once there are
+// patients to filter. This component stays mounted while the list refreshes, so a refresh,
+// a failed refresh, or a newly added patient keeps the provider's filters.
 function FilterablePatientList({ patients }: { patients: Patient[] }) {
   const [searchText, setSearchText] = useState("");
+  // Empty means every status is shown.
+  const [selectedStatuses, setSelectedStatuses] = useState<PatientStatus[]>([]);
   const searchBoxRef = useRef<HTMLInputElement>(null);
 
-  const isFiltering = searchText.trim() !== "";
-  const matchingPatients = patients.filter((patient) => matchesNameSearch(patient, searchText));
+  const isSearching = searchText.trim() !== "";
+  const isFilteringByStatus = selectedStatuses.length > 0;
+  const isFiltering = isSearching || isFilteringByStatus;
+  const matchingPatients = patients.filter((patient) => {
+    const matchesStatus = !isFilteringByStatus || selectedStatuses.includes(patient.status);
+    return matchesStatus && matchesNameSearch(patient, searchText);
+  });
   const hasMatches = matchingPatients.length > 0;
-  const totalNoun = patients.length === 1 ? "patient" : "patients";
 
   function clearFilters() {
     setSearchText("");
+    setSelectedStatuses([]);
     searchBoxRef.current?.focus();
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-sm">
-          <SearchIcon
-            aria-hidden="true"
-            className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            ref={searchBoxRef}
-            type="search"
-            aria-label="Search patients by name"
-            placeholder="Search by name"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            className="pl-8"
+        <div className="flex items-center gap-2">
+          {/* A fixed width keeps the search box and the menu in place as the status label changes. */}
+          <div className="relative w-80 shrink-0">
+            <SearchIcon
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              ref={searchBoxRef}
+              type="search"
+              aria-label="Search patients by name"
+              placeholder="Search by name"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <StatusFilter
+            patients={patients}
+            selectedStatuses={selectedStatuses}
+            onSelectedStatusesChange={setSelectedStatuses}
           />
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           {/* Always rendered so screen readers announce the count as it changes. */}
           <p role="status" className="tabular-nums">
-            {isFiltering && `Showing ${matchingPatients.length} of ${patients.length} ${totalNoun}`}
+            {isFiltering && `Showing ${matchingPatients.length} of ${formatPatientCount(patients.length)}`}
           </p>
           {/* With no matches, the message below holds the only Clear filters button. */}
           {isFiltering && hasMatches && (
@@ -153,7 +268,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
       {hasMatches ? (
         <PatientTable patients={matchingPatients} />
       ) : (
-        <NoMatchingPatients searchText={searchText} onClearFilters={clearFilters} />
+        <NoMatchingPatients message={describeNoMatches(searchText, selectedStatuses)} onClearFilters={clearFilters} />
       )}
     </div>
   );

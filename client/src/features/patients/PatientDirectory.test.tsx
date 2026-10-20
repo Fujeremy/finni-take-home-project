@@ -107,7 +107,9 @@ describe("PatientDirectory", () => {
     renderDirectory();
     const shortenedAddress = await screen.findByText("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
 
-    // The search box comes first in the tab order, then the shortened name, then the shortened address.
+    // The search box and Status button come first in the tab order, then the shortened name,
+    // then the shortened address.
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -123,7 +125,9 @@ describe("PatientDirectory", () => {
     const fullName = await screen.findByText("Jordan Lee Rivera");
 
     await user.hover(fullName);
-    // The search box is the only Tab stop; the next Tab passes over the table to the page.
+    // The search box and Status button are the only Tab stops; the next Tab passes over the
+    // table to the page.
+    await user.tab();
     await user.tab();
     await user.tab();
 
@@ -325,6 +329,132 @@ describe("PatientDirectory", () => {
       expect(searchBox).toHaveValue("riv");
       expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
       expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+    });
+  });
+  describe("status filter", () => {
+    const averyChen: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000002",
+      firstName: "Avery",
+      middleName: null,
+      lastName: "Chen",
+      status: "inquiry",
+    };
+    const samRivers: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000003",
+      firstName: "Sam",
+      middleName: null,
+      lastName: "Rivers",
+      status: "onboarding",
+    };
+    // Jordan Lee Rivera (savedPatient) is Active.
+    const threePatients = [samRivers, averyChen, savedPatient];
+
+    it("shows how many patients have each status, counting every patient even while searching", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "chen");
+
+      await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
+
+      expect(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" })).not.toBeChecked();
+      expect(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" })).toBeInTheDocument();
+      expect(screen.getByRole("menuitemcheckbox", { name: "Active, 1 patient" })).toBeInTheDocument();
+      expect(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" })).toBeInTheDocument();
+    });
+
+    it("shows only patients with the checked statuses and names them on the button", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("button", { name: "Status: Inquiry, Onboarding" })).toHaveTextContent(
+        /^Inquiry, Onboarding$/,
+      );
+      expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
+      expect(screen.getByRole("cell", { name: "Sam Rivers" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Jordan Lee Rivera" })).not.toBeInTheDocument();
+      expect(screen.getByText("Showing 2 of 3 patients")).toBeInTheDocument();
+    });
+
+    it("names one or two checked statuses, counts three or more, and shows every status when none are checked", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Active, 1 patient" }));
+      const oneStatusLabel = screen.getByRole("button", { name: "Status: Active", hidden: true });
+      expect(oneStatusLabel).toBeInTheDocument();
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" }));
+      expect(screen.getByRole("button", { name: "Status: 3 statuses", hidden: true })).toBeInTheDocument();
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Active, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("button", { name: "Status: All statuses" })).toHaveTextContent(/^All statuses$/);
+      expect(screen.getAllByRole("row")).toHaveLength(4);
+      expect(screen.queryByText(/^Showing/)).not.toBeInTheDocument();
+    });
+
+    it("shows only patients who match both the name search and the checked statuses", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.type(await screen.findByRole("searchbox", { name: "Search patients by name" }), "riv");
+
+      await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Onboarding, 1 patient" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("cell", { name: "Sam Rivers" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Jordan Lee Rivera" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(screen.getByText("Showing 1 of 3 patients")).toBeInTheDocument();
+    });
+
+    it("names the search and statuses when nothing matches, and Clear filters resets both", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+      await user.type(searchBox, "chen");
+      await user.click(screen.getByRole("button", { name: "Status: All statuses" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Active, 1 patient" }));
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" }));
+      await user.keyboard("{Escape}");
+      const noMatches = screen.getByRole("region", { name: "No matching patients" });
+      expect(noMatches).toHaveTextContent("No patient names match “chen” with status Active or Churned.");
+
+      await user.click(within(noMatches).getByRole("button", { name: "Clear filters" }));
+
+      expect(searchBox).toHaveValue("");
+      expect(searchBox).toHaveFocus();
+      expect(screen.getByRole("button", { name: "Status: All statuses" })).toBeInTheDocument();
+      expect(screen.getAllByRole("row")).toHaveLength(4);
+    });
+
+    it("explains an empty result when only statuses are checked", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse(threePatients));
+      renderDirectory();
+      await user.click(await screen.findByRole("button", { name: "Status: All statuses" }));
+
+      await user.click(screen.getByRole("menuitemcheckbox", { name: "Churned, 0 patients" }));
+      await user.keyboard("{Escape}");
+
+      expect(screen.getByRole("region", { name: "No matching patients" })).toHaveTextContent(
+        "No patients have status Churned.",
+      );
     });
   });
 });
