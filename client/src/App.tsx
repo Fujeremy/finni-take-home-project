@@ -18,8 +18,8 @@ export function App() {
   return (
     <main className="mx-auto max-w-6xl space-y-6 px-8 py-10">
       <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Patients</h1>
-        <Button ref={addPatientButtonRef} onClick={() => setIsAddPatientOpen(true)}>
+        <h1 className="text-3xl font-semibold tracking-tight">Patients</h1>
+        <Button ref={addPatientButtonRef} size="lg" className="h-10 px-4" onClick={() => setIsAddPatientOpen(true)}>
           Add patient
         </Button>
       </header>
