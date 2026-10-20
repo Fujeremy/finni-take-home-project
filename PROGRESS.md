@@ -20,13 +20,15 @@ Developer-requested polish after the milestones, each proposed and approved befo
 | Error responses for bad requests, and the directory kept visible when a refresh fails | `fix/request-errors` | **Complete** — merged in Fujeremy/finni-take-home-project#12 |
 | `npm start` runs the production build, with Express serving the built client | `polish/production-start` | **Complete** — merged in Fujeremy/finni-take-home-project#13 |
 | Darker backdrop behind the add patient dialog | `polish/dialog-backdrop` | **Complete** — merged in Fujeremy/finni-take-home-project#15 |
-| One-line patient rows, with the full text of shortened names and addresses on hover or focus | `polish/one-line-rows` | Committed (4 commits) and pushed; PR to be proposed |
+| One-line patient rows, with the full text of shortened names and addresses on hover or focus | `polish/one-line-rows` | **Complete** — merged in Fujeremy/finni-take-home-project#16 |
+| Name search for the directory (PR 1 of 4: search, status filter, sorting, toolbar layout) | `feat/directory-name-search` | Committed (3 commits); PR to be proposed |
 
 ## Implemented
 
 - **Data and API:** Postgres 17 (Docker Compose) with separate dev and test databases; `patients` table per PLAN.md §6 via the Knex CLI. Express API: `GET /api/health`, `GET /api/patients` (newest first, birth dates as stored `YYYY-MM-DD`, `createdAt` in UTC), and `POST /api/patients` (validated by the shared schema; 400 `VALIDATION_ERROR` with `fieldErrors`, 400 `INVALID_JSON` for unreadable or non-object bodies, 415 `UNSUPPORTED_MEDIA_TYPE` for non-JSON bodies). Bodies over 100 KB return 413 `PAYLOAD_TOO_LARGE`, unknown `/api` paths return a JSON 404 `NOT_FOUND`, and unexpected failures return a generic JSON 500.
 - **Shared:** `createPatientSchema` with every field rule from PLAN.md §6, and the `Patient` response type built from it.
 - **Client:** patient directory (loading, error with Retry, a Retry banner above the last loaded list when a later refresh fails, empty state pointing to the header button, and a table with name, birth date, status badge, full address on one line, and added time; each row stays on one line, and a shortened name or address shows its full text in a tooltip on hover or Tab focus). Add patient dialog: grouped fields, validation when a field is left and on Save, reserved space for errors, server field errors beside fields, values kept on failure, saving state, discard confirmation, toast naming the patient, and focus returned to Add patient.
+- **Name search:** a search box above the table filters the loaded list by first, middle, and last name, ignoring case, Latin accents, and extra spaces; every typed word must match. While searching, "Showing X of Y patients" is announced and a Clear filters button empties the search and refocuses the box. No matches replaces the table with a "No matching patients" message and its own Clear filters button. The search box only appears once patients are saved, and the search stays applied through refreshes, failed refreshes, and newly added patients. Filtering runs in the browser; the API is unchanged.
 - **Mock data:** 50 fictional patients (`server/src/db/mockPatients.ts`) covering length limits, accents and non-Latin scripts, optional fields present and absent, birth-date bounds, and Canadian and US postal formats. `npm run db:seed` replaces every patient in the development database with them; `npm run db:reset` empties it.
 - **Production start:** `npm start` builds every workspace, then runs the compiled API, which also serves `client/dist` when it exists. The page and API share http://localhost:3001; development still uses Vite on 5173.
 - **Docs:** final README per PLAN.md §11, verified from a fresh clone (C2), with seeding, resetting, and `npm start` documented.
@@ -34,9 +36,10 @@ Developer-requested polish after the milestones, each proposed and approved befo
 ## Verification
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
-- **Current totals (2026-10-20, `polish/one-line-rows`):** 45 shared, 33 server, and 33 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
+- **Current totals (2026-10-20, `feat/directory-name-search`):** 45 shared, 33 server, and 44 client tests pass; typecheck, lint, and build pass. Server tests ran against a local PostgreSQL 16 test database.
 - **Request errors:** each new server test was seen failing before its fix. With curl against the running API: `GET /api/nope` → 404 JSON, `[]` → 400 `INVALID_JSON`, `text/plain` → 415, a 200 KB body → 413, and a POST with no body still lists each missing field.
 - **One-line rows:** the new tooltip tests failed before the change; the "fits" test was confirmed to fail when the truncation check is removed. In the browser with the 50 mock patients, at 1440px and 1280px: every row was 38px tall, nothing scrolled sideways, and 12 shortened names and addresses were the only Tab stops in the table. Hovering a shortened name and tabbing to a shortened address each showed the full text.
+- **Name search:** 11 new tests (5 for the matching function, 6 for the directory). Matching any word instead of every word, and dropping the refocus after Clear filters, each made tests fail. The two tooltip Tab tests now count the search box as the first Tab stop. In the browser before rebasing onto one-line rows: "huong" found Hương Thị Đặng, "мария" and "明" each found one patient, Clear filters restored all 50 and focused the box, Escape cleared the search, and a 108-character search wrapped inside the no-match message with no sideways scroll. After rebasing, at 1440px: "bart" showed the one matching patient on a shortened one-line row, with no sideways scroll.
 - **Stale directory:** in the browser at 1440px with the 50 mock patients, stopping the API and returning to the tab kept all 50 rows and showed the refresh banner with Retry.
 - **Production start:** `npm start` built everything and served the page (200 HTML), the patient list, and the JSON 404 from port 3001. In the browser at that address, adding a patient showed the toast and put the patient first in the table.
 - **Mock dataset:** all 50 records pass the shared schema; every address is in Canada or the US; every text field hits its limit; `db:seed` and `db:reset` were run through npm against the test database (50 patients, then 50 again, then 0).
@@ -83,8 +86,8 @@ Developer-requested polish after the milestones, each proposed and approved befo
 Found in a pre-submission review (2026-10-20); each needs a developer decision before any work starts:
 
 - **Dialog code file:** the lazily loaded add patient dialog has no error boundary, so a failed download blanks the whole page.
-- **Scope:** whether to add status editing, search, or a status filter. All three are excluded in KNOWN_LIMITATIONS.md.
+- **Scope:** whether to add status editing. It is excluded in KNOWN_LIMITATIONS.md. (Search, a status filter, and browser-side sorting were approved on 2026-10-20 and are being delivered as four PRs.)
 
 ## Next step
 
-Developer review of the PR proposal for `polish/one-line-rows`.
+Developer review of the PR proposal for `feat/directory-name-search` (PR 1 of 4). Next, one at a time: the status filter (with the shadcn dropdown-menu component), browser-side sorting, and the toolbar layout from the developer's reference.

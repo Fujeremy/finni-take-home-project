@@ -57,6 +57,7 @@ describe("PatientDirectory", () => {
     renderDirectory();
 
     expect(screen.getByRole("status")).toHaveTextContent("Loading patients…");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
   it("shows each saved patient's name, birth date, status, address, and added time", async () => {
@@ -106,7 +107,8 @@ describe("PatientDirectory", () => {
     renderDirectory();
     const shortenedAddress = await screen.findByText("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
 
-    // The shortened name comes first in the tab order, then the shortened address.
+    // The search box comes first in the tab order, then the shortened name, then the shortened address.
+    await user.tab();
     await user.tab();
     await user.tab();
 
@@ -121,6 +123,8 @@ describe("PatientDirectory", () => {
     const fullName = await screen.findByText("Jordan Lee Rivera");
 
     await user.hover(fullName);
+    // The search box is the only Tab stop; the next Tab passes over the table to the page.
+    await user.tab();
     await user.tab();
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
@@ -145,6 +149,7 @@ describe("PatientDirectory", () => {
     expect(emptyState).toHaveTextContent("Patients you add will appear here. Use Add patient to add the first one.");
     expect(within(emptyState).queryByRole("button")).not.toBeInTheDocument();
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
   });
 
   it("shows the API's error and loads the patients after Retry", async () => {
@@ -162,6 +167,7 @@ describe("PatientDirectory", () => {
     const errorAlert = await screen.findByRole("alert");
     expect(errorAlert).toHaveTextContent("Patients couldn't be loaded.");
     expect(errorAlert).toHaveTextContent("Something went wrong. Please try again.");
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Retry" }));
 
@@ -212,5 +218,113 @@ describe("PatientDirectory", () => {
 
     expect(await screen.findByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+  describe("name search", () => {
+    const averyChen: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000002",
+      firstName: "Avery",
+      middleName: null,
+      lastName: "Chen",
+    };
+
+    it("shows only the patients whose names match the search, with a count", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+
+      await user.type(searchBox, "riv");
+
+      expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(screen.getByText("Showing 1 of 2 patients")).toBeInTheDocument();
+    });
+
+    it("shows no count or Clear filters button until a search is typed", async () => {
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+
+      renderDirectory();
+
+      await screen.findByRole("searchbox", { name: "Search patients by name" });
+      expect(screen.queryByText(/^Showing/)).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+    });
+
+    it("replaces the table with a no-match message when no names match", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+
+      await user.type(searchBox, "zed");
+
+      const noMatches = screen.getByRole("region", { name: "No matching patients" });
+      expect(noMatches).toHaveTextContent("No patient names match “zed”.");
+      expect(within(noMatches).getByRole("button", { name: "Clear filters" })).toBeInTheDocument();
+      expect(screen.queryByRole("table")).not.toBeInTheDocument();
+      expect(screen.getByText("Showing 0 of 2 patients")).toBeInTheDocument();
+    });
+
+    it("shows every patient again and returns focus to the search box after Clear filters", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([averyChen, savedPatient]));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+      await user.type(searchBox, "riv");
+
+      await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+      expect(searchBox).toHaveValue("");
+      expect(searchBox).toHaveFocus();
+      expect(screen.getByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
+      expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+    });
+
+    it("keeps the search applied when the refreshed list includes a new patient", async () => {
+      const user = userEvent.setup();
+      const newRivera: Patient = {
+        ...savedPatient,
+        id: "00000000-0000-4000-8000-000000000003",
+        firstName: "Sam",
+        middleName: null,
+        lastName: "Rivers",
+      };
+      vi.spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(jsonResponse([averyChen, savedPatient]))
+        .mockResolvedValueOnce(jsonResponse([newRivera, averyChen, savedPatient]));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+      await user.type(searchBox, "riv");
+
+      act(() => {
+        window.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      expect(await screen.findByRole("cell", { name: "Sam Rivers" })).toBeInTheDocument();
+      expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+      expect(searchBox).toHaveValue("riv");
+      expect(screen.getByText("Showing 2 of 3 patients")).toBeInTheDocument();
+    });
+
+    it("keeps the search applied to the last loaded list when a refresh fails", async () => {
+      const user = userEvent.setup();
+      vi.spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(jsonResponse([averyChen, savedPatient]))
+        .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+      renderDirectory();
+      const searchBox = await screen.findByRole("searchbox", { name: "Search patients by name" });
+      await user.type(searchBox, "riv");
+
+      act(() => {
+        window.dispatchEvent(new Event("visibilitychange"));
+      });
+
+      await screen.findByRole("alert");
+      expect(searchBox).toHaveValue("riv");
+      expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+      expect(screen.queryByRole("cell", { name: "Avery Chen" })).not.toBeInTheDocument();
+    });
   });
 });
