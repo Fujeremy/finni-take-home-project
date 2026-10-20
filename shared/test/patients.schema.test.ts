@@ -43,7 +43,7 @@ describe("createPatientSchema", () => {
     ["lastName", "Enter a last name."],
     ["addressLine1", "Enter an address."],
     ["city", "Enter a city."],
-    ["region", "Enter a region."],
+    ["region", "Enter a province or state."],
     ["postalCode", "Enter a postal code."],
   ])("rejects a %s that is blank after trimming", (field, expectedMessage) => {
     const input = { ...validPatientInput, [field]: "   " };
@@ -101,14 +101,14 @@ describe("createPatientSchema", () => {
   });
 
   it.each([
-    ["firstName", 100, "First name must be 100 characters or fewer."],
-    ["middleName", 100, "Middle name must be 100 characters or fewer."],
-    ["lastName", 100, "Last name must be 100 characters or fewer."],
-    ["addressLine1", 255, "Address line 1 must be 255 characters or fewer."],
-    ["addressLine2", 255, "Address line 2 must be 255 characters or fewer."],
-    ["city", 100, "City must be 100 characters or fewer."],
-    ["region", 100, "Region must be 100 characters or fewer."],
-    ["postalCode", 20, "Postal code must be 20 characters or fewer."],
+    ["firstName", 100, "100 characters max."],
+    ["middleName", 100, "100 characters max."],
+    ["lastName", 100, "100 characters max."],
+    ["addressLine1", 255, "255 characters max."],
+    ["addressLine2", 255, "255 characters max."],
+    ["city", 100, "100 characters max."],
+    ["region", 100, "100 characters max."],
+    ["postalCode", 20, "20 characters max."],
   ])("rejects a %s one character over its %i-character limit", (field, maxLength, expectedMessage) => {
     const input = { ...validPatientInput, [field]: "x".repeat(maxLength + 1) };
 

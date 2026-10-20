@@ -105,9 +105,10 @@ export function PatientDirectory() {
         <h2 id="empty-directory-heading" className="text-lg font-medium">
           No patients yet
         </h2>
-        <p className="text-muted-foreground">Patients you add will appear here.</p>
-        {/* Opens the add patient dialog once it exists (Milestone B4). */}
-        <Button disabled>Add patient</Button>
+        <p className="text-muted-foreground">
+          Patients you add will appear here. Use <strong className="font-medium text-foreground">Add patient</strong>{" "}
+          to add the first one.
+        </p>
       </section>
     );
   }

@@ -48,7 +48,7 @@ button.
 - Use a simple table for the supported desktop view.
 - Display status as a text label with a supporting color.
 - Display all patients in one list, ordered as defined in §7 (API).
-- Include a helpful empty state with an “Add patient” action.
+- Include a helpful empty state that points to the “Add patient” button in the page header.
 - Show loading and error states, including a retry action.
 - Keep information readable without page-level horizontal scrolling.
 

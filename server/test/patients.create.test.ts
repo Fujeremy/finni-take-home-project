@@ -122,7 +122,7 @@ describe("POST /api/patients", () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.fieldErrors).toEqual({
-      firstName: ["First name must be 100 characters or fewer."],
+      firstName: ["100 characters max."],
     });
     expect(await countSavedPatients()).toBe(0);
   });
