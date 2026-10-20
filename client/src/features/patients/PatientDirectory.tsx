@@ -52,9 +52,9 @@ const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
 // with "…" instead of widening their column or wrapping.
 function PatientTable({ patients }: { patients: Patient[] }) {
   return (
-    // A short hover delay keeps tooltips from flashing as the pointer passes over rows.
+    // A hover delay keeps tooltips from flashing as the pointer passes over rows.
     // Keyboard focus still opens them right away.
-    <TooltipProvider delayDuration={300}>
+    <TooltipProvider delayDuration={700}>
       <Table aria-label="Patients" className="table-fixed">
         <TableHeader>
           <TableRow>
