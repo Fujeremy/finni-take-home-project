@@ -1,4 +1,5 @@
 import js from "@eslint/js";
+import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -6,6 +7,10 @@ export default tseslint.config(
   { ignores: ["**/dist/**", "**/coverage/**", ".claude/worktrees/**"] },
   js.configs.recommended,
   tseslint.configs.recommended,
+  {
+    files: ["client/src/**/*.{ts,tsx}"],
+    ...reactHooks.configs.flat.recommended,
+  },
   {
     rules: {
       // Some signatures need unused arguments, e.g. Express error handlers must take four.
