@@ -9,7 +9,7 @@
 - Implement the current milestone or explicitly assigned task. Do not silently omit required functionality or add unplanned features.
 
 ## Stack and architecture
-- Use only the stack and structure in `PLAN.md` §5 (Stack and structure).
+- Use only the stack and structure in `PLAN.md` §3 (Architecture and stack).
 - Add layers only when they own distinct responsibilities. No speculative generic repositories or pass-through services.
 
 ## Decision boundaries
@@ -38,7 +38,7 @@
 
 ## Before implementation
 For a new feature or structural change, propose the approach, files, and tests, then wait for approval. Routine fixes within an approved task can proceed.
-Include the intended test scenarios in plain language in the proposal so coverage can be reviewed before writing code. Focus on the behaviors in `PLAN.md` §9; add §10 coverage only when implementing those optional enhancements.
+Include the intended test scenarios in plain language in the proposal so coverage can be reviewed before writing code. Focus on the behaviors in `PLAN.md` §6 (Automated verification); add the optional enhancement's coverage in §6 only when implementing it.
 
 ## Implementation scope and workflow
 - Implement one logical feature or vertical slice at a time. Avoid unrelated features, refactoring, or restructuring.
@@ -53,7 +53,7 @@ Include the intended test scenarios in plain language in the proposal so coverag
 - Before any handoff, commit request, or PR proposal, show `git diff --stat` and confirm the change meets these criteria. Explain any large or wide diff, or propose a split.
 - For backend behavior, start with a failing behavior/API test where useful (red → green → refactor). For UI, test meaningful interactions rather than styling details.
 - Follow existing conventions and implement the smallest solution that meets the agreed behavior.
-- Complete the applicable checks in `PLAN.md` §9 before handoff.
+- Complete the applicable checks in `PLAN.md` §6 before handoff.
 - Self-review the diff for correctness, unnecessary complexity, dead code, unsafe data handling, and contract mismatches.
 - Leave the application runnable after each milestone. Do not commit changes unless explicitly instructed.
 
@@ -77,7 +77,7 @@ Include the intended test scenarios in plain language in the proposal so coverag
 - Before handoff, review the changed code for readability: simplify unnecessary branches, remove redundant state and indirection, and confirm names communicate what the code does.
 
 ## Testing
-- Follow `PLAN.md` §9 (Verification) for what to test and how the test database is isolated. When implementing optional enhancements, also follow the additional verification requirements in §10.
+- Follow `PLAN.md` §6 (Delivery and verification) for what to test and how the test database is isolated. When implementing the optional enhancement, also follow its verification requirements in §6.
 - Test observable behavior, not implementation details or third-party component internals. Never rewrite a test just to hide a regression; investigate the behavior.
 
 ## Test readability
@@ -91,12 +91,12 @@ Include the intended test scenarios in plain language in the proposal so coverag
 - Prefer explicit test cases. Use parameterized tests only when the cases share the same behavior and remain easy to understand.
 - For UI tests, use accessible roles and labels, and interact through the UI as a user would.
 - For API tests, make the request, expected status, response, and any relevant persistence checks easy to follow.
-- Mock only necessary boundaries; follow the database isolation requirements in `PLAN.md` §9.
+- Mock only necessary boundaries; follow the database isolation requirements in `PLAN.md` §6.
 - Avoid arbitrary delays, excessive setup, snapshot-heavy assertions, and checks of implementation details.
 - Before handoff, read each new test independently: its setup, action, and expected behavior should be understandable without tracing several helper files.
 
 ## UI/UX
-- Follow `PLAN.md` §4 (Core user experience) for required states, accessibility, and feedback rules, and §9 (Verification) for manual checks. Apply §10 requirements when implementing optional enhancements.
+- Follow `PLAN.md` §2 (User experience) for required states, accessibility, and feedback rules, and §6 (Manual verification) for manual checks. Apply the optional enhancement's requirements in §6 when implementing it.
 - A visual mock with hardcoded data is not completion of an API-backed workflow.
 
 ## Handoff

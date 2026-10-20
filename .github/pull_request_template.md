@@ -18,7 +18,7 @@
 
 ## Verification
 
-<!-- Only checks you actually ran, with results. See PLAN.md §9. -->
+<!-- Only checks you actually ran, with results. See PLAN.md §6. -->
 
 - **Automated:**
 - **Manual:**
