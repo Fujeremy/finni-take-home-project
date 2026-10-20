@@ -1,8 +1,15 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
-import { AddPatientDialog } from "@/features/patients/AddPatientDialog";
 import { PatientDirectory } from "@/features/patients/PatientDirectory";
+
+// The dialog and the form libraries only it uses are about 40% of the app's code. Splitting
+// them out keeps the page's first download small; rendering the closed dialog from the start
+// loads that code in the background, so opening it later doesn't wait on a download.
+const AddPatientDialog = lazy(async () => {
+  const dialogModule = await import("@/features/patients/AddPatientDialog");
+  return { default: dialogModule.AddPatientDialog };
+});
 
 export function App() {
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
@@ -17,11 +24,13 @@ export function App() {
         </Button>
       </header>
       <PatientDirectory />
-      <AddPatientDialog
-        open={isAddPatientOpen}
-        onOpenChange={setIsAddPatientOpen}
-        returnFocusTo={addPatientButtonRef}
-      />
+      <Suspense fallback={null}>
+        <AddPatientDialog
+          open={isAddPatientOpen}
+          onOpenChange={setIsAddPatientOpen}
+          returnFocusTo={addPatientButtonRef}
+        />
+      </Suspense>
       <Toaster position="bottom-right" />
     </main>
   );

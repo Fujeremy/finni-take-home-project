@@ -43,7 +43,7 @@ describe("Add patient dialog", () => {
 
     await user.click(within(header).getByRole("button", { name: "Add patient" }));
 
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
     expect(dialog).toHaveFocus();
     expect(within(dialog).getByRole("combobox", { name: "Status" })).toHaveTextContent("Inquiry");
     expect(within(dialog).getByLabelText("Middle name (optional)")).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
 
     await user.tab();
 
@@ -64,7 +64,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
 
     await user.click(within(dialog).getByLabelText("City"));
     await user.type(within(dialog).getByLabelText("City"), "Springfield");
@@ -78,7 +78,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
 
     await user.click(within(dialog).getByRole("button", { name: "Save patient" }));
 
@@ -104,7 +104,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
     await user.click(within(dialog).getByRole("button", { name: "Save patient" }));
     const firstNameInput = within(dialog).getByLabelText("First name");
 
@@ -118,7 +118,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
     const countryInput = within(dialog).getByLabelText("Country code");
 
     await user.type(countryInput, "CAN");
@@ -132,7 +132,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
     const countryInput = within(dialog).getByLabelText("Country code");
     await user.type(countryInput, "C");
     await user.tab();
@@ -148,7 +148,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
 
     await user.type(within(dialog).getByLabelText("City"), "Springfield");
     await user.tab();
@@ -161,7 +161,7 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const dialog = screen.getByRole("dialog", { name: "Add patient" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
     const firstNameInput = within(dialog).getByLabelText("First name");
 
     await user.click(firstNameInput);
@@ -176,7 +176,8 @@ describe("Add patient dialog", () => {
     const user = userEvent.setup();
     renderApp();
     await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-    const statusSelect = screen.getByRole("combobox", { name: "Status" });
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
+    const statusSelect = within(dialog).getByRole("combobox", { name: "Status" });
 
     await user.click(statusSelect);
     await user.click(screen.getByRole("option", { name: "Active" }));
@@ -189,8 +190,9 @@ describe("Add patient dialog", () => {
     renderApp();
     const headerAddButton = within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" });
     await user.click(headerAddButton);
+    const dialog = await screen.findByRole("dialog", { name: "Add patient" });
 
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(headerAddButton).toHaveFocus();
@@ -243,7 +245,7 @@ async function fillInValidPatient(user: UserEvent, dialog: HTMLElement) {
 
 async function openAddPatientDialog(user: UserEvent): Promise<HTMLElement> {
   await user.click(within(screen.getByRole("banner")).getByRole("button", { name: "Add patient" }));
-  return screen.getByRole("dialog", { name: "Add patient" });
+  return screen.findByRole("dialog", { name: "Add patient" });
 }
 
 describe("Saving a new patient", () => {

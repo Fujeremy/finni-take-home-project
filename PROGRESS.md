@@ -12,7 +12,7 @@
 
 | PR | Branch | Scope | State |
 |---|---|---|---|
-| C1 | `polish/bundle-size` | Load the add patient dialog only when it opens | In progress |
+| C1 | `polish/bundle-size` | Split the add patient dialog out of the page's first download | Committed locally (2 commits), not pushed, awaiting review |
 | C2 | `polish/readme-verification` | Final README (§11) and the §9 manual checklist on a fresh clone | Not started |
 
 Screen-reader review: the developer will run through the app and report issues in chat; fixes land before C2's final verification.
@@ -28,6 +28,7 @@ Screen-reader review: the developer will run through the app and report issues i
 
 - **Foundation and Milestone B:** each commit checked in its own state with `npm test`, `npm run typecheck`, `npm run lint`, and `npm run build`; key tests confirmed to fail when their code is broken; browser checks for every user-facing change. Details are in PRs #1–#7.
 - **Current totals:** 45 shared, 20 server, and 28 client tests pass.
+- **C1:** the production build splits into a 332 KB main file (105 KB gzipped) and a 231 KB dialog file, with no size warning. In the browser, the page loads the main file first and the dialog file right after; the first open takes about 44ms. Loading the dialog only on first open was tried and rejected: React's Suspense reveal made that first open take about 334ms.
 - **Not yet verified:** a real screen reader (pending the developer's review); the §9 checklist in one pass on a fresh clone (C2).
 
 ## Decisions made
@@ -38,6 +39,7 @@ Screen-reader review: the developer will run through the app and report issues i
 - Directory shows an "Added" column; dates display like "Mar 14, 1988". The empty state points to the header's Add patient button (PLAN.md §4).
 - Dialog: Radix Select for status; region labelled "Province or state"; fields validated when left (`onTouched`) and on Save; no `maxLength`, so over-limit text is flagged rather than cut off; each field reserves one line for its error and length messages read "100 characters max."; opening focuses the dialog itself; invalid fields get a soft red border with the glow only on keyboard focus; asks before discarding entries; closing blocked while saving.
 - Generated shadcn edits: Sonner uses the light theme instead of next-themes; Dialog and AlertDialog have no backdrop blur or zoom, because redrawing the blur made typing laggy. Light theme only (KNOWN_LIMITATIONS.md).
+- Client bundle: the add patient dialog is a separate file that starts loading right after the page renders, so the page's first download is smaller without slowing the first open.
 - Pins: TypeScript 6.0 (typescript-eslint doesn't support 7.x); `@hookform/resolvers` 5.2 (6.x has unresolvable optional peers).
 - `npm audit`: 7 high findings from one `braces` advisory in the `shadcn` CLI's tooling. Not reachable at runtime and not in the bundle; no patched `braces` exists. Developer decision: neither fix nor document.
 
@@ -56,4 +58,4 @@ None.
 
 ## Next step
 
-Finish C1 (dialog loaded on demand) and hand off for review.
+Developer review of C1, then approval to push and open it. Meanwhile, the developer's screen-reader feedback; then C2 (final README and §9 checklist).
