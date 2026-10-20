@@ -28,8 +28,7 @@ The architecture includes:
 ## 3. Assumptions
 
 Features outside the initial submission scope are listed in
-[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md). Do not implement them
-without explicit approval.
+[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
 
 - Use fictional patient information only.
 - The application represents one provider workspace.
