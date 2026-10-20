@@ -208,6 +208,21 @@ describe("POST /api/patients", () => {
     expect(await countSavedPatients()).toBe(0);
   });
 
+  it("rejects an array body with INVALID_JSON and saves nothing", async () => {
+    const app = createApp(testDb);
+
+    const response = await request(app).post("/api/patients").send([validPatientInput]);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: "INVALID_JSON",
+        message: "The request body must be a JSON object.",
+      },
+    });
+    expect(await countSavedPatients()).toBe(0);
+  });
+
   it("rejects a body over 100 KB with 413 and saves nothing", async () => {
     const app = createApp(testDb);
     const oversizedInput = { ...validPatientInput, firstName: "a".repeat(101 * 1024) };
