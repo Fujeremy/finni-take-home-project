@@ -1,6 +1,6 @@
 import type { Patient } from "@finni/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PatientDirectory } from "./PatientDirectory";
@@ -119,6 +119,51 @@ describe("PatientDirectory", () => {
     await user.click(screen.getByRole("button", { name: "Retry" }));
 
     expect(await screen.findByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("keeps showing the loaded patients with a Retry banner when a refresh fails", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse([savedPatient]))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    renderDirectory();
+    await screen.findByRole("cell", { name: "Jordan Lee Rivera" });
+
+    // Returning to the browser tab makes TanStack Query refresh the list.
+    act(() => {
+      window.dispatchEvent(new Event("visibilitychange"));
+    });
+
+    const refreshAlert = await screen.findByRole("alert");
+    expect(refreshAlert).toHaveTextContent("Patients couldn't be refreshed. Showing the last loaded list.");
+    expect(refreshAlert).toHaveTextContent("The server can't be reached. Check that it's running, then try again.");
+    expect(within(refreshAlert).getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "Jordan Lee Rivera" })).toBeInTheDocument();
+  });
+
+  it("removes the refresh banner and shows the latest patients after Retry", async () => {
+    const user = userEvent.setup();
+    const newerPatient: Patient = {
+      ...savedPatient,
+      id: "00000000-0000-4000-8000-000000000002",
+      firstName: "Avery",
+      middleName: null,
+      lastName: "Chen",
+    };
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(jsonResponse([savedPatient]))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(jsonResponse([newerPatient, savedPatient]));
+    renderDirectory();
+    await screen.findByRole("cell", { name: "Jordan Lee Rivera" });
+    act(() => {
+      window.dispatchEvent(new Event("visibilitychange"));
+    });
+    const refreshAlert = await screen.findByRole("alert");
+
+    await user.click(within(refreshAlert).getByRole("button", { name: "Retry" }));
+
+    expect(await screen.findByRole("cell", { name: "Avery Chen" })).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

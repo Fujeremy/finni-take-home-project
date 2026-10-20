@@ -75,19 +75,34 @@ function PatientTable({ patients }: { patients: Patient[] }) {
   );
 }
 
+function EmptyDirectory() {
+  return (
+    <section aria-labelledby="empty-directory-heading" className="space-y-3 rounded-lg border p-8 text-center">
+      <h2 id="empty-directory-heading" className="text-lg font-medium">
+        No patients yet
+      </h2>
+      <p className="text-muted-foreground">
+        Patients you add will appear here. Use <strong className="font-medium text-foreground">Add patient</strong>{" "}
+        to add the first one.
+      </p>
+    </section>
+  );
+}
+
 export function PatientDirectory() {
   const patientsQuery = useQuery({
     queryKey: ["patients"],
     queryFn: getPatients,
     retry: false,
   });
+  const retryLabel = patientsQuery.isFetching ? "Retrying…" : "Retry";
 
   if (patientsQuery.isPending) {
     return <p role="status">Loading patients…</p>;
   }
 
-  if (patientsQuery.isError) {
-    const retryLabel = patientsQuery.isFetching ? "Retrying…" : "Retry";
+  // Nothing has loaded yet, so the error is all there is to show.
+  if (patientsQuery.isError && patientsQuery.data === undefined) {
     return (
       <div role="alert" className="space-y-3">
         <p className="font-medium">Patients couldn't be loaded.</p>
@@ -99,19 +114,30 @@ export function PatientDirectory() {
     );
   }
 
-  if (patientsQuery.data.length === 0) {
-    return (
-      <section aria-labelledby="empty-directory-heading" className="space-y-3 rounded-lg border p-8 text-center">
-        <h2 id="empty-directory-heading" className="text-lg font-medium">
-          No patients yet
-        </h2>
-        <p className="text-muted-foreground">
-          Patients you add will appear here. Use <strong className="font-medium text-foreground">Add patient</strong>{" "}
-          to add the first one.
-        </p>
-      </section>
-    );
-  }
+  // A later refresh failed, such as when the provider returns to the tab while the API is down.
+  // The last loaded list stays visible below the error.
+  const isShowingStaleList = patientsQuery.isError;
+  const patients = patientsQuery.data;
 
-  return <PatientTable patients={patientsQuery.data} />;
+  return (
+    <div className="space-y-4">
+      {isShowingStaleList && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-4 rounded-lg border border-destructive/30 p-3 text-sm"
+        >
+          <div>
+            <p className="font-medium text-destructive">
+              Patients couldn't be refreshed. Showing the last loaded list.
+            </p>
+            <p className="text-muted-foreground">{patientsQuery.error.message}</p>
+          </div>
+          <Button variant="outline" onClick={() => patientsQuery.refetch()} disabled={patientsQuery.isFetching}>
+            {retryLabel}
+          </Button>
+        </div>
+      )}
+      {patients.length === 0 ? <EmptyDirectory /> : <PatientTable patients={patients} />}
+    </div>
+  );
 }
