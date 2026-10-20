@@ -2,6 +2,7 @@ import type { Patient } from "@finni/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent, { type UserEvent } from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 
@@ -17,12 +18,13 @@ function postRequestCount(): number {
   return fetchCalls.filter(([, init]) => init?.method === "POST").length;
 }
 
-// Renders the whole page, starting with an empty directory.
+// Renders the whole page at /patients, starting with an empty directory.
 function renderApp() {
+  const router = createMemoryRouter([{ path: "/patients", element: <App /> }], { initialEntries: ["/patients"] });
   const queryClient = new QueryClient();
   render(
     <QueryClientProvider client={queryClient}>
-      <App />
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
 }

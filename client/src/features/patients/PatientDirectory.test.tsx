@@ -2,6 +2,7 @@ import type { Patient } from "@finni/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PatientDirectory } from "./PatientDirectory";
 
@@ -35,14 +36,24 @@ function simulateTextWiderThanItsCell() {
   vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(100);
 }
 
-// Each test gets its own query cache, so no test sees another's data.
-function renderDirectory() {
+// Each test gets its own query cache, so no test sees another's data. The directory renders
+// inside a router opened at the last address given; earlier addresses are the pages Back
+// returns to.
+function renderDirectory(addresses: string[] = ["/patients"]) {
+  const router = createMemoryRouter(
+    [
+      { path: "/patients", element: <PatientDirectory /> },
+      { path: "*", element: <p>Another page</p> },
+    ],
+    { initialEntries: addresses, initialIndex: addresses.length - 1 },
+  );
   const queryClient = new QueryClient();
   render(
     <QueryClientProvider client={queryClient}>
-      <PatientDirectory />
+      <RouterProvider router={router} />
     </QueryClientProvider>,
   );
+  return router;
 }
 
 afterEach(() => {
