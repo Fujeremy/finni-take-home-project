@@ -23,17 +23,18 @@ export const PATIENT_FIELD_MAX_LENGTHS = {
   country: 2,
 } as const;
 
-function tooLongMessage(fieldLabel: string, maxLength: number): string {
-  return `${fieldLabel} must be ${maxLength} characters or fewer.`;
+// Kept short so it fits on one line under even the narrowest field in the form.
+function tooLongMessage(maxLength: number): string {
+  return `${maxLength} characters max.`;
 }
 
 // Trimmed text that must not be blank. A missing or non-text value gets the same message.
-function requiredText(requiredMessage: string, fieldLabel: string, maxLength: number) {
+function requiredText(requiredMessage: string, maxLength: number) {
   return z
     .string({ error: requiredMessage })
     .trim()
     .min(1, { error: requiredMessage, abort: true })
-    .max(maxLength, tooLongMessage(fieldLabel, maxLength));
+    .max(maxLength, tooLongMessage(maxLength));
 }
 
 // Trimmed text where a missing, null, or blank value is stored as null.
@@ -41,7 +42,7 @@ function optionalText(fieldLabel: string, maxLength: number) {
   return z
     .string({ error: `${fieldLabel} must be text.` })
     .trim()
-    .max(maxLength, tooLongMessage(fieldLabel, maxLength))
+    .max(maxLength, tooLongMessage(maxLength))
     .nullish()
     .transform((value) => {
       if (!value) {
@@ -99,28 +100,16 @@ const countryCode = z
   .regex(/^[A-Z]{2}$/, "Enter a two-letter country code, e.g. CA.");
 
 export const createPatientSchema = z.object({
-  firstName: requiredText("Enter a first name.", "First name", PATIENT_FIELD_MAX_LENGTHS.firstName),
+  firstName: requiredText("Enter a first name.", PATIENT_FIELD_MAX_LENGTHS.firstName),
   middleName: optionalText("Middle name", PATIENT_FIELD_MAX_LENGTHS.middleName),
-  lastName: requiredText("Enter a last name.", "Last name", PATIENT_FIELD_MAX_LENGTHS.lastName),
+  lastName: requiredText("Enter a last name.", PATIENT_FIELD_MAX_LENGTHS.lastName),
   dateOfBirth,
   status: z.enum(PATIENT_STATUSES, { error: "Choose a status." }),
-  addressLine1: requiredText(
-    "Enter an address.",
-    "Address line 1",
-    PATIENT_FIELD_MAX_LENGTHS.addressLine1,
-  ),
+  addressLine1: requiredText("Enter an address.", PATIENT_FIELD_MAX_LENGTHS.addressLine1),
   addressLine2: optionalText("Address line 2", PATIENT_FIELD_MAX_LENGTHS.addressLine2),
-  city: requiredText("Enter a city.", "City", PATIENT_FIELD_MAX_LENGTHS.city),
-  region: requiredText(
-    "Enter a province or state.",
-    "Province or state",
-    PATIENT_FIELD_MAX_LENGTHS.region,
-  ),
-  postalCode: requiredText(
-    "Enter a postal code.",
-    "Postal code",
-    PATIENT_FIELD_MAX_LENGTHS.postalCode,
-  ),
+  city: requiredText("Enter a city.", PATIENT_FIELD_MAX_LENGTHS.city),
+  region: requiredText("Enter a province or state.", PATIENT_FIELD_MAX_LENGTHS.region),
+  postalCode: requiredText("Enter a postal code.", PATIENT_FIELD_MAX_LENGTHS.postalCode),
   country: countryCode,
 });
 

@@ -169,7 +169,7 @@ describe("Add patient dialog", () => {
     await user.click(within(dialog).getByRole("button", { name: "Save patient" }));
 
     expect(firstNameInput).toHaveValue("a".repeat(101));
-    expect(firstNameInput).toHaveAccessibleDescription("First name must be 100 characters or fewer.");
+    expect(firstNameInput).toHaveAccessibleDescription("100 characters max.");
   });
 
   it("lets the provider choose a different status", async () => {
@@ -287,7 +287,7 @@ describe("Saving a new patient", () => {
           error: {
             code: "VALIDATION_ERROR",
             message: "Check the highlighted fields.",
-            fieldErrors: { postalCode: ["Postal code must be 20 characters or fewer."] },
+            fieldErrors: { postalCode: ["20 characters max."] },
           },
         },
         400,
@@ -299,7 +299,7 @@ describe("Saving a new patient", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Save patient" }));
 
-    expect(await within(dialog).findByText("Postal code must be 20 characters or fewer.")).toBeInTheDocument();
+    expect(await within(dialog).findByText("20 characters max.")).toBeInTheDocument();
     expect(within(dialog).getByLabelText("Postal code")).toHaveAttribute("aria-invalid", "true");
     expect(within(dialog).getByLabelText("First name")).toHaveValue("Jordan");
     expect(within(dialog).getByLabelText("Address line 1")).toHaveValue("42 Maple Lane");
