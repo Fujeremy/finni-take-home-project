@@ -67,6 +67,7 @@ Open an accessible dialog with fields grouped into name, patient details, and ad
 | UI | Tailwind CSS, shadcn/ui |
 | Forms and validation | React Hook Form, Zod |
 | Server state | TanStack Query |
+| Routing | React Router |
 | Backend | Express |
 | Persistence | Knex, PostgreSQL |
 | Testing | Vitest, React Testing Library, Supertest |
@@ -81,7 +82,7 @@ shared/   Browser-safe validation schemas and shared types
 
 Define `createPatientSchema` in `shared/src/patients.schema.ts` and infer creation input types from it. Both the form and API use this schema; the server remains the validation enforcement boundary. Keep database connections, Express imports, and server configuration outside shared code.
 
-Use a plain React table. The core single-page workflow does not require a router.
+Use a plain React table. Use React Router for client routes. In production, Express serves `index.html` for non-API GET requests without a file extension, so client routes survive a refresh.
 
 During development, Vite proxies API requests to Express. For production builds, Express serves the built client and API on one port. Docker Compose runs PostgreSQL; the application runs locally.
 
