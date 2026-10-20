@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import { AddPatientDialog } from "@/features/patients/AddPatientDialog";
 import { PatientDirectory } from "@/features/patients/PatientDirectory";
 
@@ -21,6 +22,7 @@ export function App() {
         onOpenChange={setIsAddPatientOpen}
         returnFocusTo={addPatientButtonRef}
       />
+      <Toaster position="bottom-right" />
     </main>
   );
 }

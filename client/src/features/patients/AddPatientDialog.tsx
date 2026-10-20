@@ -7,8 +7,10 @@ import {
   type CreatePatientInput,
 } from "@finni/shared";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { RefObject } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, type RefObject } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,9 +23,11 @@ import {
 import { Field, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PATIENT_STATUS_LABELS } from "./patientFormatting";
+import { ApiError, createPatient } from "@/lib/api";
+import { formatPatientName, PATIENT_STATUS_LABELS } from "./patientFormatting";
 
 type TextFieldName = Exclude<keyof CreatePatientInput, "status">;
+type PatientFieldName = keyof CreatePatientInput;
 
 const EMPTY_PATIENT_FORM: CreatePatientInput = {
   firstName: "",
@@ -129,16 +133,25 @@ type AddPatientDialogProps = {
   returnFocusTo: RefObject<HTMLElement | null>;
 };
 
+function isPatientFieldName(fieldName: string): fieldName is PatientFieldName {
+  return fieldName in EMPTY_PATIENT_FORM;
+}
+
 export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatientDialogProps) {
+  const queryClient = useQueryClient();
   const form = useForm<CreatePatientInput, unknown, CreatePatientData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: EMPTY_PATIENT_FORM,
     mode: "onSubmit",
     reValidateMode: "onChange",
   });
+  // A failure that isn't about one field, such as a server error or no connection.
+  const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
+  const isSaving = form.formState.isSubmitting;
 
   function closeDialog() {
     form.reset(EMPTY_PATIENT_FORM);
+    setSaveErrorMessage(null);
     onOpenChange(false);
   }
 
@@ -147,17 +160,52 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
       onOpenChange(true);
       return;
     }
+    // Escape, the close button, and clicking outside are ignored until the save finishes.
+    if (isSaving) {
+      return;
+    }
     closeDialog();
   }
 
-  function savePatient(_patient: CreatePatientData) {
-    // Sending the patient to the API is added in the next commit.
+  // Puts each server message beside its field. Returns false if none matched a field.
+  function showServerFieldErrors(error: ApiError): boolean {
+    let shownCount = 0;
+    for (const [fieldName, messages] of Object.entries(error.fieldErrors)) {
+      const firstMessage = messages?.[0];
+      if (isPatientFieldName(fieldName) && firstMessage) {
+        form.setError(fieldName, { type: "server", message: firstMessage });
+        shownCount += 1;
+      }
+    }
+    return shownCount > 0;
+  }
+
+  async function savePatient(patient: CreatePatientData) {
+    setSaveErrorMessage(null);
+
+    let savedPatient;
+    try {
+      savedPatient = await createPatient(patient);
+    } catch (error) {
+      if (error instanceof ApiError && showServerFieldErrors(error)) {
+        return;
+      }
+      const message = error instanceof Error ? error.message : "Something went wrong. Please try again.";
+      setSaveErrorMessage(message);
+      return;
+    }
+
+    // Reload the directory from the API so it shows exactly what was saved.
+    await queryClient.invalidateQueries({ queryKey: ["patients"] });
+    toast.success(`${formatPatientName(savedPatient)} was added.`);
+    closeDialog();
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"
+        showCloseButton={!isSaving}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           returnFocusTo.current?.focus();
@@ -176,7 +224,7 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
             onSubmit={form.handleSubmit(savePatient)}
             className="space-y-6"
           >
-            <FieldSet>
+            <FieldSet disabled={isSaving}>
               <FieldLegend>Name</FieldLegend>
               <div className="grid grid-cols-3 gap-4">
                 <PatientTextField name="firstName" label="First name" />
@@ -185,7 +233,7 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
               </div>
             </FieldSet>
 
-            <FieldSet>
+            <FieldSet disabled={isSaving}>
               <FieldLegend>Patient details</FieldLegend>
               <div className="grid grid-cols-2 gap-4">
                 <PatientTextField
@@ -199,7 +247,7 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
               </div>
             </FieldSet>
 
-            <FieldSet>
+            <FieldSet disabled={isSaving}>
               <FieldLegend>Address</FieldLegend>
               <PatientTextField name="addressLine1" label="Address line 1" />
               <PatientTextField name="addressLine2" label="Address line 2" optional />
@@ -213,11 +261,20 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
               </div>
             </FieldSet>
 
+            {saveErrorMessage && (
+              <div role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
+                <p className="font-medium">The patient wasn't saved.</p>
+                <p>{saveErrorMessage}</p>
+              </div>
+            )}
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog}>
+              <Button type="button" variant="outline" onClick={closeDialog} disabled={isSaving}>
                 Cancel
               </Button>
-              <Button type="submit">Save patient</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? "Saving…" : "Save patient"}
+              </Button>
             </DialogFooter>
           </form>
         </FormProvider>
