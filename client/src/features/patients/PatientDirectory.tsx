@@ -48,8 +48,11 @@ const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
   churned: "bg-zinc-200 text-zinc-700",
 };
 
-// Small muted labels set the header apart from the patient rows below it.
-const COLUMN_HEADER_CLASSES = "h-9 text-xs font-medium tracking-wide text-muted-foreground uppercase";
+// Small muted labels set the header apart from the patient rows below it. The header sticks to
+// the top of the window while scrolling; its bottom line is a shadow because a row border
+// doesn't stick along with it.
+const COLUMN_HEADER_CLASSES =
+  "sticky top-0 z-10 h-9 bg-background text-xs font-medium tracking-wide text-muted-foreground uppercase shadow-[inset_0_-1px_0_var(--color-border)]";
 
 // Fixed column widths keep every row on one line: long names and addresses are shortened
 // with "…" instead of widening their column or wrapping.
@@ -62,7 +65,7 @@ function PatientTable({ patients }: { patients: Patient[] }) {
           text up with the toolbar, and the row highlight reaches just past it. */}
       <div className="-mx-2">
         <Table aria-label="Patients" className="table-fixed">
-          <TableHeader>
+          <TableHeader className="[&_tr]:border-b-0">
             <TableRow className="hover:bg-transparent">
               <TableHead className={`${COLUMN_HEADER_CLASSES} w-[24%]`}>Name</TableHead>
               <TableHead className={`${COLUMN_HEADER_CLASSES} w-[12%]`}>Date of birth</TableHead>
