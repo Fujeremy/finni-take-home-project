@@ -118,6 +118,8 @@ No client-side router is needed for the core single-page workflow.
 Add React Router if implementing the optional patient detail route.
 
 The Vite development server proxies API requests to Express.
+For a production build, Express also serves the built client, so the
+page and API share one port.
 Docker Compose runs PostgreSQL; the application runs locally.
 
 ## 6. Data model

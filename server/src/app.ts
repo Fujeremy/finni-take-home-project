@@ -41,8 +41,13 @@ const handleUnexpectedError: ErrorRequestHandler = (error, request, response, _n
   });
 };
 
+type AppOptions = {
+  // The client's production build (client/dist). In development Vite serves the client instead.
+  builtClientPath?: string;
+};
+
 // The database is passed in so tests can run the same app against the test database.
-export function createApp(db: Knex): Express {
+export function createApp(db: Knex, { builtClientPath }: AppOptions = {}): Express {
   const app = express();
   app.use(express.json());
 
@@ -62,6 +67,12 @@ export function createApp(db: Knex): Express {
       },
     });
   });
+
+  // The page and the API share one origin, as they do through the Vite proxy in development.
+  // The client has no routes of its own, so only real files (and index.html at /) are served.
+  if (builtClientPath) {
+    app.use(express.static(builtClientPath));
+  }
 
   app.use(handleRequestBodyError);
   app.use(handleUnexpectedError);
