@@ -9,6 +9,8 @@ Read the current repository's `CLAUDE.md`, `PLAN.md`, `PROGRESS.md`, and actual 
 
 Inspect branch state, the intended base/head diff, and relevant verification evidence. Include uncommitted work when preparing a proposed PR, but distinguish it from the committed diff that GitHub would receive. Do not commit or push during preparation. If the base or scope cannot be established from repository context, ask the developer.
 
+Before drafting, check that the PR is digestible under the `CLAUDE.md` commit and PR criteria. Show `git diff --stat` for the base/head diff and the commit list, and confirm the PR has one reviewable purpose, keeps mechanical changes in their own commits, and contains no unrelated edits. If it fails, propose how to split it and stop instead of drafting. Explain any large or wide diff that remains cohesive.
+
 Draft a concise title and fill every template section while preserving headings, fields, and comments. Describe final behavior, important file responsibilities, actual test results, and material limitations. Mark unrun checks explicitly; never infer success. Do not invent issue references or verification evidence.
 
 ## Write it so it's easy to digest
