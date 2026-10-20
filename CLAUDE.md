@@ -3,7 +3,6 @@
 ## Mission and source of truth
 - Read `PLAN.md` before implementation; it defines core features, optional enhancements, approved dependencies, contracts, and milestones.
 - Read `KNOWN_LIMITATIONS.md` for explicitly excluded features and acknowledged omissions.
-- Read `PROGRESS.md` next; it records the current milestone, state, and open questions. If it is missing, create it when application implementation begins.
 - Do not implement excluded features or optional enhancements without explicit approval. Do not add preparatory UI, API parameters, or abstractions for excluded work.
 - The developer owns product and architectural decisions. Agents assist with implementation, testing, and code review while following established conventions.
 - Implement the current milestone or explicitly assigned task. Do not silently omit required functionality or add unplanned features.
@@ -21,7 +20,7 @@
 ## Spec changes
 - Do not edit `PLAN.md` or `CLAUDE.md` without explicit developer approval, including small wording fixes.
 - Propose spec changes in the handoff: what to change, why, and the evidence.
-- Once a change is approved, update its owning document in the same task: `PLAN.md` for features and technical contracts, `KNOWN_LIMITATIONS.md` for omissions, and `CLAUDE.md` for working rules. `PROGRESS.md` records actual implementation and verification status.
+- Once a change is approved, update its owning document in the same task: `PLAN.md` for features and technical contracts, `KNOWN_LIMITATIONS.md` for omissions, and `CLAUDE.md` for working rules.
 
 ## Pull requests and deployment
 - Use `.claude/skills/prepare-pr/SKILL.md` when preparing or publishing a PR.
@@ -29,12 +28,6 @@
 - Read the current repository's PR template from disk, including comments, and preserve every heading, field, and comment. After publishing, read back the saved description and correct any template omissions before reporting completion.
 - Approval to implement or prepare a PR does not authorize commits, pushes, or PR publication. Obtain explicit authorization for each action; one instruction may authorize multiple named actions.
 - PR publication does not authorize merging, enabling auto-merge, or deployment. Do not perform those actions without separate explicit developer authorization. Before an authorized push or PR publication, inspect repository workflows for automatic deployment; disclose any deployment trigger and obtain deployment authorization before triggering it.
-
-## Progress tracking
-- `PROGRESS.md` is a short status board, not a log. Keep it current rather than appending history.
-- Update `PROGRESS.md` after each meaningful implementation or verification checkpoint and at every handoff. Record implemented functionality, work in progress, verification results, blockers or open questions, and the next step.
-- Keep progress claims aligned with the actual application: distinguish implemented behavior from planned work, and verified behavior from work that has not been checked.
-- Mark a milestone complete only after the developer approves it. Finishing the work is not the same as approval.
 
 ## Before implementation
 For a new feature or structural change, propose the approach, files, and tests, then wait for approval. Routine fixes within an approved task can proceed.
@@ -107,6 +100,6 @@ After each slice, stop and report:
 - Commands and tests actually run and their results; untested behavior. Never claim unrun checks passed.
 - Proposed spec changes, if any.
 
-Follow the Progress tracking requirements before handoff.
+Keep claims aligned with the actual application: distinguish implemented behavior from planned work, and verified behavior from work that has not been checked. Treat a milestone as complete only after the developer approves it; finishing the work is not the same as approval.
 
 Leave changes uncommitted. Don't start the next slice without approval.

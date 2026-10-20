@@ -197,5 +197,4 @@ Beyond the limitations above:
 
 - [PLAN.md](PLAN.md): feature scope, stack, architecture, and acceptance checks.
 - [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md): excluded features and limitations.
-- [PROGRESS.md](PROGRESS.md): milestone status, verification, and decisions.
 - [CLAUDE.md](CLAUDE.md): agent workflow and code/test readability standards.

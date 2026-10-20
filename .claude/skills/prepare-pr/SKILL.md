@@ -5,7 +5,7 @@ description: Prepare and collaboratively review a pull request title and templat
 
 # Prepare a pull request together
 
-Read the current repository's `CLAUDE.md`, `PLAN.md`, `PROGRESS.md`, and actual PR template, including HTML comments. Follow the repository's publication and deployment authorization rules. This skill's invocation authorizes local preparation only.
+Read the current repository's `CLAUDE.md`, `PLAN.md`, and actual PR template, including HTML comments. Follow the repository's publication and deployment authorization rules. This skill's invocation authorizes local preparation only.
 
 Inspect branch state, the intended base/head diff, and relevant verification evidence. Include uncommitted work when preparing a proposed PR, but distinguish it from the committed diff that GitHub would receive. Do not commit or push during preparation. If the base or scope cannot be established from repository context, ask the developer.
 
