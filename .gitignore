@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Local environment and agent settings
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Build output and test coverage
+dist/
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# macOS files
+.DS_Store
