@@ -3,7 +3,9 @@
   "compilerOptions": {
     "composite": false,
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    // Tests run in Node; the shipped source keeps no Node types so it stays browser-safe.
+    "types": ["node"]
   },
   "include": ["src", "test"]
 }

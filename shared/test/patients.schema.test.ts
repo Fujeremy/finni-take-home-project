@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import {
   createPatientSchema,
@@ -10,6 +10,7 @@ const validPatientInput: CreatePatientInput = {
   firstName: "Jordan",
   middleName: "Lee",
   lastName: "Rivera",
+  dateOfBirth: "1988-03-14",
   status: "inquiry",
   addressLine1: "42 Maple Lane",
   addressLine2: "Unit 3",
@@ -167,5 +168,78 @@ describe("createPatientSchema", () => {
 
     expect(result).not.toHaveProperty("id");
     expect(result).not.toHaveProperty("notes");
+  });
+});
+
+describe("createPatientSchema date of birth", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    delete process.env.TZ;
+  });
+
+  // Freezes the clock at a local date and time, leaving timers untouched.
+  function setLocalNow(year: number, monthIndex: number, day: number, hour: number, minute: number) {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(year, monthIndex, day, hour, minute));
+  }
+
+  it("accepts January 1, 1900", () => {
+    const input = { ...validPatientInput, dateOfBirth: "1900-01-01" };
+
+    const result = createPatientSchema.parse(input);
+
+    expect(result.dateOfBirth).toBe("1900-01-01");
+  });
+
+  it("rejects a date before January 1, 1900", () => {
+    const input = { ...validPatientInput, dateOfBirth: "1899-12-31" };
+
+    const fieldErrors = fieldErrorsFor(input);
+
+    expect(fieldErrors).toEqual({
+      dateOfBirth: ["Enter a date of birth on or after January 1, 1900."],
+    });
+  });
+
+  it.each(["2025-02-30", "2025-13-01", "14/03/1988", "1988-3-14"])(
+    "rejects %j as not a valid date",
+    (dateOfBirth) => {
+      const input = { ...validPatientInput, dateOfBirth };
+
+      const fieldErrors = fieldErrorsFor(input);
+
+      expect(fieldErrors).toEqual({ dateOfBirth: ["Enter a valid date of birth."] });
+    },
+  );
+
+  it.each([
+    ["blank", "  "],
+    ["missing", undefined],
+  ])("asks for a date of birth when it is %s", (_description, dateOfBirth) => {
+    const input = { ...validPatientInput, dateOfBirth };
+
+    const fieldErrors = fieldErrorsFor(input);
+
+    expect(fieldErrors).toEqual({ dateOfBirth: ["Enter a date of birth."] });
+  });
+
+  it("accepts today and rejects tomorrow", () => {
+    setLocalNow(2026, 9, 20, 12, 0);
+
+    const todayResult = createPatientSchema.safeParse({ ...validPatientInput, dateOfBirth: "2026-10-20" });
+    const tomorrowErrors = fieldErrorsFor({ ...validPatientInput, dateOfBirth: "2026-10-21" });
+
+    expect(todayResult.success).toBe(true);
+    expect(tomorrowErrors).toEqual({ dateOfBirth: ["Date of birth can't be in the future."] });
+  });
+
+  it("uses the local date rather than the UTC date", () => {
+    // In UTC+14, 8:00 on October 21 is still October 20 in UTC.
+    process.env.TZ = "Pacific/Kiritimati";
+    setLocalNow(2026, 9, 21, 8, 0);
+
+    const result = createPatientSchema.safeParse({ ...validPatientInput, dateOfBirth: "2026-10-21" });
+
+    expect(result.success).toBe(true);
   });
 });
