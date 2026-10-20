@@ -9,7 +9,9 @@
     "build:shared": "tsc -b shared",
     "typecheck": "npm run build:shared && npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
-    "build": "npm run build --workspaces --if-present"
+    "test": "npm run build:shared && npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w server"
   },
   "workspaces": [
     "shared",
