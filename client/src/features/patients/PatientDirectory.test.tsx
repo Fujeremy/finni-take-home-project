@@ -28,6 +28,13 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+// jsdom doesn't lay out the page, so text never overflows on its own. This makes every
+// element report text wider than its box, as long text in a narrow cell would in a browser.
+function simulateTextWiderThanItsCell() {
+  vi.spyOn(Element.prototype, "scrollWidth", "get").mockReturnValue(500);
+  vi.spyOn(Element.prototype, "clientWidth", "get").mockReturnValue(100);
+}
+
 // Each test gets its own query cache, so no test sees another's data.
 function renderDirectory() {
   const queryClient = new QueryClient();
@@ -78,6 +85,46 @@ describe("PatientDirectory", () => {
 
     expect(await screen.findByRole("cell", { name: "Jordan Rivera" })).toBeInTheDocument();
     expect(screen.getByRole("cell", { name: "42 Maple Lane, Springfield, ON K1A 0B1, CA" })).toBeInTheDocument();
+  });
+
+  it("shows the full name in a tooltip when the provider hovers over a shortened name", async () => {
+    const user = userEvent.setup();
+    simulateTextWiderThanItsCell();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
+    renderDirectory();
+    const shortenedName = await screen.findByText("Jordan Lee Rivera");
+
+    await user.hover(shortenedName);
+
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("Jordan Lee Rivera");
+  });
+
+  it("shows the full address in a tooltip when the provider tabs to a shortened address", async () => {
+    const user = userEvent.setup();
+    simulateTextWiderThanItsCell();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
+    renderDirectory();
+    const shortenedAddress = await screen.findByText("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
+
+    // The shortened name comes first in the tab order, then the shortened address.
+    await user.tab();
+    await user.tab();
+
+    expect(shortenedAddress).toHaveFocus();
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
+  });
+
+  it("shows no tooltip and skips text that fits its cell", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
+    renderDirectory();
+    const fullName = await screen.findByText("Jordan Lee Rivera");
+
+    await user.hover(fullName);
+    await user.tab();
+
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    expect(document.body).toHaveFocus();
   });
 
   it("shows the birth date as the same day for a viewer behind UTC", async () => {
