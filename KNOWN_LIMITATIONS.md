@@ -12,8 +12,7 @@ Included functionality and optional enhancements are defined in
 | Feature | Current limitation |
 |---|---|
 | Responsive design | Only desktop layouts are supported and verified. Mobile and tablet layouts are outside scope. |
-| Search scope | Search matches patient names only, not addresses, birth dates, or other fields. It runs only in the browser over the full loaded list (see Pagination); the API has no search parameters. The search resets when the page is refreshed rather than being kept in the URL. |
-| Status filtering | The directory shows all statuses without a status filter. |
+| Search, filter, and sort scope | Search, the status filter, and sorting run only in the browser over the full loaded list (see Pagination); the API has no search, filter, sort, or pagination parameters. Search matches patient names only, not addresses, birth dates, or other fields. Sorting is limited to added date and last name. All three reset when the page is refreshed rather than being kept in the URL. |
 | Pagination | The initial directory retrieves and displays all patients in one list, without page navigation or a page-size selector. This is intended for the small demonstration dataset; performance with large datasets has not been verified. |
 | Patient updates | Saved patient information cannot be edited, including patient status. Corrections and status transitions are outside scope. |
 | Archiving and restoring | Patients cannot be archived, hidden through an archive workflow, or restored. The Churned status is a patient status, not an archive mechanism. |
@@ -23,7 +22,6 @@ Included functionality and optional enhancements are defined in
 | Audit history | No activity log or record history showing who created, viewed, or changed patient information. |
 | Duplicate detection and merging | No duplicate warnings or patient merging. |
 | Bulk operations and data transfer | No bulk entry, CSV import/export, or batch actions. Patients are entered individually. |
-| User-controlled sorting | No user-controlled sorting; the fixed order is defined in PLAN.md §7. |
 | Timezone-aware birth-date validation | The client and server each check that a date of birth is not after their own local date. This assumes the provider and server share a timezone, which holds for the documented local setup. If they differ, the server could disagree with the form by one day near midnight. A future version would send the browser's IANA timezone with each request, for example in an `X-Time-Zone` header, and have the server determine "today" in the provider's timezone. |
 | Change tracking (`updated_at`) | Patients store only a creation timestamp (`created_at`). There is no `updated_at` column because saved patients cannot be edited (see Patient updates). If editing is added, a future version would add an `updated_at` column set on every change, alongside the audit history described above. |
 | Dark mode | Only a light theme is provided. shadcn's dark theme colors remain in the stylesheet, but nothing switches to them. A future version would add a theme that follows the system setting, with an optional toggle. |
