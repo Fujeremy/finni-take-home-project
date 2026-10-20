@@ -198,6 +198,7 @@ No additional search or sorting indexes are necessary initially.
 Use camelCase in JSON and snake_case in PostgreSQL.
 
 A request body over 100 KB returns 413 with code `PAYLOAD_TOO_LARGE`.
+An unknown path under `/api` returns 404 with code `NOT_FOUND`.
 
 Handle unexpected failures with a consistent JSON error response.
 Log diagnostic details on the server without returning them to users.

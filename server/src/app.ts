@@ -53,6 +53,16 @@ export function createApp(db: Knex): Express {
 
   app.use("/api/patients", createPatientsRouter(db));
 
+  // Without this, Express answers unknown API paths with an HTML page.
+  app.use("/api", (_request, response) => {
+    response.status(404).json({
+      error: {
+        code: "NOT_FOUND",
+        message: "This API endpoint doesn't exist.",
+      },
+    });
+  });
+
   app.use(handleRequestBodyError);
   app.use(handleUnexpectedError);
 
