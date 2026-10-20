@@ -12,7 +12,8 @@
     "build": "npm run build --workspaces --if-present"
   },
   "workspaces": [
-    "shared"
+    "shared",
+    "server"
   ],
   "devDependencies": {
     "@eslint/js": "^10.0.1",

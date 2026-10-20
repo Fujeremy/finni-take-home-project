@@ -1,0 +1,15 @@
+{
+  "name": "@finni/server",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@finni/shared": "*",
+    "knex": "^3.3.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}
