@@ -132,6 +132,7 @@ Use camelCase JSON fields and snake_case database columns.
 |---|---|
 | `GET /api/health` | Check API and database connectivity; return `200` with `{ "status": "ok" }` |
 | `GET /api/patients` | Return all saved patient fields, ordered by creation time descending, then ID ascending; return an empty collection when none exist |
+| `GET /api/patients/:patientId` | Return `200` with the complete saved patient. Reject an ID that is not a UUID before querying the database |
 | `POST /api/patients` | Validate with the shared schema, persist the patient, and return `201` with the complete saved record |
 
 Use a consistent JSON error envelope containing an error code and message. Validation errors also include `fieldErrors`, keyed by JSON field name.
@@ -139,6 +140,8 @@ Use a consistent JSON error envelope containing an error code and message. Valid
 | Condition | HTTP status | Error code |
 |---|---|---|
 | Invalid patient fields | 400 | `VALIDATION_ERROR` |
+| Patient ID that is not a UUID | 400 | `INVALID_PATIENT_ID` |
+| No patient with that ID | 404 | `PATIENT_NOT_FOUND` |
 | Malformed JSON or non-object JSON body | 400 | `INVALID_JSON` |
 | Non-JSON request format | 415 | `UNSUPPORTED_MEDIA_TYPE` |
 | Request body over 100 KB | 413 | `PAYLOAD_TOO_LARGE` |
