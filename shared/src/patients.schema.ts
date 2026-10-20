@@ -9,7 +9,7 @@ export const PATIENT_STATUSES = [
 
 export type PatientStatus = (typeof PATIENT_STATUSES)[number];
 
-// Matches the varchar(n) limits in the patients migration (PLAN.md §6).
+// Matches the varchar(n) limits in the patients migration (PLAN.md §4).
 // The migration keeps its own fixed values rather than importing these.
 export const PATIENT_FIELD_MAX_LENGTHS = {
   firstName: 100,

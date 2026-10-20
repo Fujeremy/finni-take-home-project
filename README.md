@@ -6,54 +6,66 @@ patient records in a desktop directory.
 > **Fictional data only.** This is a take-home submission. Do not enter real
 > patient information; it does not establish readiness for storing real health data.
 
-## What it does
-
-- **Patient directory:** every saved patient in one table, newest first, showing
-  name, date of birth, status, full address, and when they were added.
-- **Add patient:** an accessible dialog that validates each field as you leave it,
-  shows errors beside the affected fields, keeps what you entered if saving fails,
-  and asks before discarding unsaved entries.
-- **Persistence:** records are stored in PostgreSQL and remain after a refresh.
-- **One set of rules:** the same validation code runs in the browser for instant
-  feedback and in the API, which enforces it.
-
 ## Prerequisites
 
 - Node.js 24 or later (includes npm)
 - Docker with Docker Compose
 
-The app uses local ports 5432 (PostgreSQL), 3001 (API), and 5173 (client).
+The app uses local ports 5432 (PostgreSQL), 3001 (API), and 5173 (development client).
 
-## Setup
+## Quick start
 
-Run these from the repository root:
+From the repository root, these commands take a fresh clone to a running app
+with 50 fictional patients:
 
 ```bash
 npm install
 cp .env.example .env
 docker compose up -d --wait
 npm run db:migrate
+npm run db:seed
+npm start
 ```
 
-`docker compose up` starts PostgreSQL with a development database and a separate
-test database. `npm run db:migrate` creates the `patients` table in the
-development database.
+Open http://localhost:3001.
 
-## Run the app
+- `docker compose up` starts PostgreSQL with a development database and a separate
+  test database.
+- `npm run db:migrate` creates the `patients` table in the development database.
+- `npm run db:seed` fills the directory with mock patients (see [Mock data](#mock-data)).
+  Skip it to start from an empty directory.
+- `npm start` builds everything and serves the page and the API from port 3001.
 
-To try the app, build and start it with one command:
+## What it does
+
+- **Patient directory:** a table showing each patient's name, date of birth,
+  status, address, and when they were added. Each patient stays on one line; a
+  shortened name or address shows its full text on hover or keyboard focus.
+- **Find patients:** search by name (ignoring letter case and accents), filter by
+  one or more statuses, and sort by date added or last name.
+- **Pages:** 25, 50, or 100 patients per page, with Previous and Next.
+- **Add patient:** an accessible dialog that validates each field as you leave it,
+  shows errors beside the affected fields, keeps what you entered if saving fails,
+  and asks before discarding unsaved entries. Text over a field's length limit is
+  flagged rather than silently cut off.
+- **Persistence:** records are stored in PostgreSQL and remain after a refresh.
+- **One set of rules:** the same validation code runs in the browser for instant
+  feedback and in the API, which enforces it.
+
+## Try it (production build)
+
+Use this to try the app as a reviewer would. It's the last Quick start step:
 
 ```bash
 npm start
 ```
 
-Open http://localhost:3001. Express serves the built page and the API from the same
-port. This is the production build: nothing reloads when files change, so rerun
-`npm start` after editing code, or use the development setup below.
+Open http://localhost:3001. Nothing reloads when files change, so rerun
+`npm start` after editing code, or use live reload below.
 
-## Run in development
+## Develop with live reload
 
-For live reloading while you edit, start the API and the client in two terminals:
+Use this while editing code. Start the API and the client in two terminals:
 
 ```bash
 npm run dev:server
@@ -92,7 +104,8 @@ npm run build
 - **server:** the API against the test database (listing, creating, rejecting
   invalid input without saving, and safe error responses).
 - **client:** the directory and the add patient dialog through the UI, as a user
-  would use them (loading, empty, and error states; validation; saving; discarding).
+  would use them (loading, empty, and error states; search, status filter,
+  sorting, and paging; validation; saving; discarding).
 
 ## Database commands
 
@@ -143,51 +156,45 @@ The API has three endpoints, all under `/api`:
 | `GET /api/patients` | Lists all patients, newest first |
 | `POST /api/patients` | Validates and saves a patient; returns field errors for invalid input |
 
+`GET /api/patients` returns every patient in one response. The browser does the
+searching, filtering, sorting, and paging.
+
 ## Product assumptions
 
 - All patient information is fictional.
 - The app represents one provider workspace, with no sign-in or separate accounts.
 - Different patients may share the same name.
-- The dataset is small enough to show in one list.
+- The dataset is small enough to load in one request; search, filtering, sorting,
+  and paging happen in the browser.
 - The supported view is desktop; mobile and tablet layouts are not.
 
 ## Scope and known limitations
 
-Design choices:
+[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists every excluded feature and what
+a future version would add. The most important:
 
-- **Birth dates** must be real dates from January 1, 1900 through today. "Today" is
-  each side's own local date, which assumes the browser and server share a timezone.
-- **Addresses** are free text with a two-letter country code. There are no postal
-  code formats or address lookups.
-- **Validation timing:** each field is checked when you leave it, then as you
-  correct it, and all fields are checked on Save. Long text is flagged rather than
-  silently cut off.
-- **Health endpoint** proves the API and database are connected, separately from
-  patient data.
-
-Not included: editing, archiving, or deleting patients; search, filtering, sorting,
-or pagination; sign-in, audit history, or duplicate detection; mobile layouts; dark
-mode; and production deployment (`npm start` runs the production build, but only locally).
-[KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md) lists each one with what a future
-version would add.
+- **Browser-only search and paging:** fine for the demonstration data, but a large
+  patient list would need search, filtering, sorting, and paging on the server.
+- **No editing, archiving, or deleting** of saved patients.
+- **No sign-in or audit history:** one shared workspace with no access controls.
+- **Free-text addresses:** a two-letter country code, with no postal code formats
+  or address lookups.
+- **Birth dates** run from January 1, 1900 through today, where "today" is each
+  side's own local date. This assumes the browser and server share a timezone.
+- **Desktop only, light theme only,** and no production deployment (`npm start`
+  runs the production build locally).
 
 ## Possible improvements
 
-- **Canada and US addresses:** country and province or state dropdowns, with
-  postal and ZIP code format checks.
-- **Patient detail page** with a direct link for each patient (PLAN.md §10).
-- **Search, status filters, and pagination** for larger directories.
-- **Editing patients,** with change tracking and audit history.
-- **Timezone-aware birth dates:** send the browser's timezone so the server checks
-  "today" in the provider's timezone.
+Beyond the limitations above:
+
+- **Patient detail page** with a direct link for each patient (the optional
+  enhancement in PLAN.md §6).
 - **Continuous integration** running tests, typecheck, lint, and build on every PR.
 - **Automated accessibility checks** alongside manual screen-reader testing.
-- **Dark mode** that follows the system setting.
-- **Production deployment** with backups and monitoring.
 
 ## Project documentation
 
 - [PLAN.md](PLAN.md): feature scope, stack, architecture, and acceptance checks.
 - [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md): excluded features and limitations.
-- [PROGRESS.md](PROGRESS.md): milestone status, verification, and decisions.
 - [CLAUDE.md](CLAUDE.md): agent workflow and code/test readability standards.
