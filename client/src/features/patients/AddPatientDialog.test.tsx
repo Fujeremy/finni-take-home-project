@@ -294,3 +294,59 @@ describe("Saving a new patient", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 });
+
+describe("Discarding entered values", () => {
+  it("asks before closing with entries, and Keep editing keeps every value", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    const dialog = await openAddPatientDialog(user);
+    await user.type(within(dialog).getByLabelText("First name"), "Jordan");
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    const confirmation = screen.getByRole("alertdialog", { name: "Discard this patient?" });
+    await user.click(within(confirmation).getByRole("button", { name: "Keep editing" }));
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Add patient" })).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("First name")).toHaveValue("Jordan");
+  });
+
+  it("returns to the form when Escape is pressed in the confirmation", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    const dialog = await openAddPatientDialog(user);
+    await user.type(within(dialog).getByLabelText("City"), "Springfield");
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(within(dialog).getByLabelText("City")).toHaveValue("Springfield");
+  });
+
+  it("closes without saving after Discard, and the next open starts empty", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    const dialog = await openAddPatientDialog(user);
+    await user.type(within(dialog).getByLabelText("First name"), "Jordan");
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Discard" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(postRequestCount()).toBe(0);
+    const reopenedDialog = await openAddPatientDialog(user);
+    expect(within(reopenedDialog).getByLabelText("First name")).toHaveValue("");
+  });
+
+  it("closes right away when nothing was entered", async () => {
+    const user = userEvent.setup();
+    renderApp();
+    await openAddPatientDialog(user);
+
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});

@@ -11,6 +11,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type RefObject } from "react";
 import { Controller, FormProvider, useForm, useFormContext } from "react-hook-form";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -147,12 +157,28 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
   });
   // A failure that isn't about one field, such as a server error or no connection.
   const [saveErrorMessage, setSaveErrorMessage] = useState<string | null>(null);
-  const isSaving = form.formState.isSubmitting;
+  const [isDiscardConfirmOpen, setIsDiscardConfirmOpen] = useState(false);
+  // Read during render so React Hook Form keeps these values current.
+  const { isDirty, isSubmitting: isSaving } = form.formState;
 
   function closeDialog() {
     form.reset(EMPTY_PATIENT_FORM);
     setSaveErrorMessage(null);
+    setIsDiscardConfirmOpen(false);
     onOpenChange(false);
+  }
+
+  // Cancel, Escape, the close button, and clicking outside all come here.
+  function requestClose() {
+    if (isSaving) {
+      return;
+    }
+    // "Entered" means anything changed from the starting form; Inquiry alone doesn't count.
+    if (isDirty) {
+      setIsDiscardConfirmOpen(true);
+      return;
+    }
+    closeDialog();
   }
 
   function handleOpenChange(nextOpen: boolean) {
@@ -160,11 +186,7 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
       onOpenChange(true);
       return;
     }
-    // Escape, the close button, and clicking outside are ignored until the save finishes.
-    if (isSaving) {
-      return;
-    }
-    closeDialog();
+    requestClose();
   }
 
   // Puts each server message beside its field. Returns false if none matched a field.
@@ -269,7 +291,7 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
             )}
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog} disabled={isSaving}>
+              <Button type="button" variant="outline" onClick={requestClose} disabled={isSaving}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSaving}>
@@ -278,6 +300,21 @@ export function AddPatientDialog({ open, onOpenChange, returnFocusTo }: AddPatie
             </DialogFooter>
           </form>
         </FormProvider>
+
+        <AlertDialog open={isDiscardConfirmOpen} onOpenChange={setIsDiscardConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Discard this patient?</AlertDialogTitle>
+              <AlertDialogDescription>Your entries will be lost.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep editing</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={closeDialog}>
+                Discard
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );
