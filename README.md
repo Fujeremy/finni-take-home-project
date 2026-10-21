@@ -46,8 +46,10 @@ Open http://localhost:3001.
 - **Find patients:** search by name (ignoring letter case and accents), filter by
   one or more statuses, and sort by date added or last name.
 - **Pages:** 25, 50, or 100 patients per page, with Previous and Next.
-- **Patient details:** `/patients/:patientId` shows one patient's saved
-  information, including their age and the date and time they were added.
+- **Patient details:** select a name in the directory, or open
+  `/patients/:patientId`, to see one patient's saved information, including
+  their age and the date and time they were added. Going back returns to the
+  directory as you left it.
 - **Add patient:** an accessible dialog that validates each field as you leave it,
   shows errors beside the affected fields, keeps what you entered if saving fails,
   and asks before discarding unsaved entries. Text over a field's length limit is

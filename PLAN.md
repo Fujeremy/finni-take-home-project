@@ -27,7 +27,7 @@ Use one main page with a patient directory and an **Add patient** button.
 
 ### Patient directory
 
-Display a desktop table containing each patient’s full name, birth date, status, address, and the date they were added. Show the added date in the viewer’s timezone, without the time, and status as text with a supporting color.
+Display a desktop table containing each patient’s full name, birth date, status, address, and the date they were added. Each name links to the patient’s details page. Show the added date in the viewer’s timezone, without the time, and status as text with a supporting color.
 
 Keep rows on one line, with comma-separated address parts. Truncate long names and addresses and expose the full text on hover or keyboard focus. Avoid page-level horizontal scrolling.
 
@@ -188,8 +188,9 @@ Approved and implemented: a read-only page at `/patients/:patientId`, alongside 
 - Wrap long names and addresses instead of shortening them.
 - Provide loading, retryable error, and not-found states. Show not-found for both unknown and invalid patient IDs.
 - Support direct links and refreshes, and link back to the directory with **All patients**.
+- Returning to the directory, with Back or with **All patients** after opening the patient from it, restores the directory’s settings and scroll position.
 
-Verify the page's states and fields, and that both routes work after a refresh.
+Verify the page's states and fields, opening a patient from the directory and returning to it, and that both routes work after a refresh.
 
 ### Definition of done
 

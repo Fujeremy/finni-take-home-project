@@ -74,6 +74,10 @@ version would add.
 ### Interface
 
 - **Desktop only.** Mobile and tablet layouts are not supported or verified.
+- **Focus after Back.** Returning from a patient's details restores the
+  directory's settings and scroll position, but keyboard focus starts at the top
+  of the page.
+  *Future:* return focus to the patient's name link.
 - **Light theme only.** shadcn's dark theme colors remain in the stylesheet,
   but nothing switches to them.
   *Future:* a theme that follows the system setting, with an optional toggle.
