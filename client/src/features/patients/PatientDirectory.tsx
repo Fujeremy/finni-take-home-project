@@ -9,7 +9,7 @@ import {
   XIcon,
 } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -406,14 +406,6 @@ function NameSearch({ appliedSearchText, onSearchTextChange }: NameSearchProps) 
   const [typedText, setTypedText] = useState(appliedSearchText);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // When the applied search changes from outside the box, such as Back to another address,
-  // the box shows it. Adjusting state during render avoids a flash of the old text.
-  const [lastAppliedSearchText, setLastAppliedSearchText] = useState(appliedSearchText);
-  if (appliedSearchText !== lastAppliedSearchText) {
-    setLastAppliedSearchText(appliedSearchText);
-    setTypedText(appliedSearchText);
-  }
-
   const trimmedTypedText = typedText.trim();
   const hasUnappliedText = trimmedTypedText !== appliedSearchText;
 
@@ -470,14 +462,12 @@ function NameSearch({ appliedSearchText, onSearchTextChange }: NameSearchProps) 
 // patients to filter. Their settings live in the page address, so reloading or coming back
 // to the directory restores them; a refresh or a newly added patient keeps them too.
 function FilterablePatientList({ patients }: { patients: Patient[] }) {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { searchText, selectedStatuses, sortOrder, pageNumber, pageSize } = readDirectorySettings(searchParams);
   const tableRef = useRef<HTMLDivElement>(null);
 
   // Replacing the history entry means Back leaves the directory instead of stepping through
-  // every filter and page the provider tried. navigate keeps the query string as written;
-  // setSearchParams would encode the commas between statuses again.
+  // every filter and page the provider tried.
   function changeSettings(changedSettings: Partial<DirectorySettings>) {
     const nextSettings: DirectorySettings = {
       searchText,
@@ -487,7 +477,7 @@ function FilterablePatientList({ patients }: { patients: Patient[] }) {
       pageSize,
       ...changedSettings,
     };
-    navigate({ search: toSearchString(nextSettings) }, { replace: true });
+    setSearchParams(toSearchString(nextSettings), { replace: true });
   }
 
   const isFilteringByStatus = selectedStatuses.length > 0;

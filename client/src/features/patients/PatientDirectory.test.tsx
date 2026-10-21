@@ -525,7 +525,7 @@ describe("PatientDirectory", () => {
       await user.click(screen.getByRole("menuitemcheckbox", { name: "Inquiry, 1 patient" }));
       await user.keyboard("{Escape}");
 
-      expect(router.state.location.search).toBe("?status=inquiry,onboarding");
+      expect(router.state.location.search).toBe("?status=inquiry%2Conboarding");
       await user.click(screen.getByRole("button", { name: "Clear status filter" }));
       expect(router.state.location.search).toBe("");
     });
