@@ -131,22 +131,35 @@ describe("PatientDirectory", () => {
     expect(await screen.findByRole("tooltip")).toHaveTextContent("42 Maple Lane, Unit 3, Springfield, ON K1A 0B1, CA");
   });
 
-  it("shows no tooltip and skips text that fits its cell", async () => {
+  it("shows no tooltip for text that fits its cell, and skips an address that fits", async () => {
     const user = userEvent.setup();
     vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
     renderDirectory();
-    const fullName = await screen.findByText("Jordan Lee Rivera");
+    const nameLink = await screen.findByRole("link", { name: "Jordan Lee Rivera" });
 
-    await user.hover(fullName);
-    // The search box, Status button, and Sort button come first; the next Tab passes over
-    // the table to the pager below it.
+    await user.hover(nameLink);
+    // The search box, Status button, and Sort button come first, then the name, which is
+    // always a link. The next Tab passes over the address to the pager below the table.
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
+    expect(nameLink).toHaveFocus();
     await user.tab();
 
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Rows per page: 25" })).toHaveFocus();
+  });
+
+  it("links each name to that patient's details page", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(jsonResponse([savedPatient]));
+
+    renderDirectory();
+
+    expect(await screen.findByRole("link", { name: "Jordan Lee Rivera" })).toHaveAttribute(
+      "href",
+      `/patients/${savedPatient.id}`,
+    );
   });
 
   it("shows the birth date as the same day for a viewer behind UTC", async () => {

@@ -1,3 +1,4 @@
+import type { Patient } from "@finni/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -59,5 +60,51 @@ describe("routes", () => {
     expect(await screen.findByRole("heading", { name: "Patients", level: 1 })).toBeInTheDocument();
     expect(await screen.findByRole("heading", { name: "No patients yet" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/patients");
+  });
+});
+
+describe("moving between the directory and a patient's details", () => {
+  const jordanRivera: Patient = {
+    id: "00000000-0000-4000-8000-000000000001",
+    firstName: "Jordan",
+    middleName: "Lee",
+    lastName: "Rivera",
+    dateOfBirth: "1988-03-14",
+    status: "active",
+    addressLine1: "42 Maple Lane",
+    addressLine2: null,
+    city: "Springfield",
+    region: "ON",
+    postalCode: "K1A 0B1",
+    country: "CA",
+    createdAt: "2026-10-20T03:14:00.000Z",
+  };
+  const averyChen: Patient = {
+    ...jordanRivera,
+    id: "00000000-0000-4000-8000-000000000002",
+    firstName: "Avery",
+    middleName: null,
+    lastName: "Chen",
+  };
+
+  // The directory asks for every patient; the details page asks for Jordan Lee Rivera.
+  function answerPatientRequests() {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+      if (url === "/api/patients") {
+        return jsonResponse([averyChen, jordanRivera]);
+      }
+      return jsonResponse(jordanRivera);
+    });
+  }
+
+  it("opens a patient's details page when their name is clicked", async () => {
+    const user = userEvent.setup();
+    answerPatientRequests();
+    const router = renderAppAt("/patients");
+
+    await user.click(await screen.findByRole("link", { name: "Jordan Lee Rivera" }));
+
+    expect(await screen.findByRole("heading", { name: "Jordan Lee Rivera", level: 1 })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/patients/${jordanRivera.id}`);
   });
 });

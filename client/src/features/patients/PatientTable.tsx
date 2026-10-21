@@ -47,7 +47,7 @@ export function PatientTable({ patients }: { patients: Patient[] }) {
             {patients.map((patient) => (
               <TableRow key={patient.id}>
                 <TableCell className="font-medium">
-                  <TruncatedText text={formatPatientName(patient)} />
+                  <TruncatedText text={formatPatientName(patient)} to={`/patients/${patient.id}`} />
                 </TableCell>
                 {/* Tabular figures keep digits the same width, so dates line up down the column. */}
                 <TableCell className="tabular-nums">{formatDateOfBirth(patient.dateOfBirth)}</TableCell>
