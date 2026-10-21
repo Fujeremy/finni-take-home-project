@@ -1,5 +1,4 @@
-import type { Patient, PatientStatus } from "@finni/shared";
-import { Badge } from "@/components/ui/badge";
+import type { Patient } from "@finni/shared";
 import {
   Table,
   TableBody,
@@ -14,17 +13,9 @@ import {
   formatDateOfBirth,
   formatPatientAddress,
   formatPatientName,
-  PATIENT_STATUS_LABELS,
 } from "./patientFormatting";
+import { PatientStatusBadge } from "./PatientStatusBadge";
 import { TruncatedText } from "./TruncatedText";
-
-// Color supports the text label; it is never the only way to tell statuses apart.
-const STATUS_BADGE_CLASSES: Record<PatientStatus, string> = {
-  inquiry: "bg-blue-100 text-blue-800",
-  onboarding: "bg-amber-100 text-amber-900",
-  active: "bg-green-100 text-green-800",
-  churned: "bg-zinc-200 text-zinc-700",
-};
 
 // Small muted labels set the header apart from the patient rows below it. The header sticks to
 // the top of the window while scrolling; its bottom line is a shadow because a row border
@@ -61,9 +52,7 @@ export function PatientTable({ patients }: { patients: Patient[] }) {
                 {/* Tabular figures keep digits the same width, so dates line up down the column. */}
                 <TableCell className="tabular-nums">{formatDateOfBirth(patient.dateOfBirth)}</TableCell>
                 <TableCell>
-                  <Badge className={STATUS_BADGE_CLASSES[patient.status]}>
-                    {PATIENT_STATUS_LABELS[patient.status]}
-                  </Badge>
+                  <PatientStatusBadge status={patient.status} />
                 </TableCell>
                 <TableCell>
                   <TruncatedText text={formatPatientAddress(patient)} />
