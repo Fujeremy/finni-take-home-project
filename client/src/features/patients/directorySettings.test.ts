@@ -61,7 +61,7 @@ describe("toSearchString", () => {
     expect(toSearchString(defaultSettings)).toBe("");
   });
 
-  it("writes only the settings that differ from the defaults, with plain commas between statuses", () => {
+  it("writes only the settings that differ from the defaults", () => {
     const settings: DirectorySettings = {
       ...defaultSettings,
       searchText: "riv",
@@ -69,7 +69,7 @@ describe("toSearchString", () => {
       pageNumber: 2,
     };
 
-    expect(toSearchString(settings)).toBe("q=riv&status=inquiry,onboarding&page=2");
+    expect(toSearchString(settings)).toBe("q=riv&status=inquiry%2Conboarding&page=2");
   });
 
   it("encodes characters in the search that would break the address", () => {

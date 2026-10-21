@@ -92,7 +92,5 @@ export function toSearchString(settings: DirectorySettings): string {
   if (settings.pageSize !== DEFAULT_SETTINGS.pageSize) {
     searchParams.set("size", String(settings.pageSize));
   }
-  // URLSearchParams writes commas as %2C. Commas are allowed in a query string, so they're
-  // restored to keep the status list readable in the address bar.
-  return searchParams.toString().replaceAll("%2C", ",");
+  return searchParams.toString();
 }
