@@ -27,14 +27,6 @@ export function NameSearch({ appliedSearchText, onSearchTextChange }: NameSearch
   const [typedText, setTypedText] = useState(appliedSearchText);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // When the applied search changes from outside the box, such as Back to another address,
-  // the box shows it. Adjusting state during render avoids a flash of the old text.
-  const [lastAppliedSearchText, setLastAppliedSearchText] = useState(appliedSearchText);
-  if (appliedSearchText !== lastAppliedSearchText) {
-    setLastAppliedSearchText(appliedSearchText);
-    setTypedText(appliedSearchText);
-  }
-
   const trimmedTypedText = typedText.trim();
   const hasUnappliedText = trimmedTypedText !== appliedSearchText;
 
