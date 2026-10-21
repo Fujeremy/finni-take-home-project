@@ -179,11 +179,17 @@ Verify complete and minimal patient records, persistence after reload, keyboard 
 
 Follow the README from a clean checkout. It must explain prerequisites, environment setup, startup and migration commands, testing and builds, assumptions, limitations, and fictional-data-only usage.
 
-### Optional enhancement
+### Optional enhancement: patient details page
 
-After the core workflow is verified and the added scope is explicitly approved, consider a read-only patient detail page at `/patients/:patientId`, linked from a directory at `/patients`.
+Approved and implemented: a read-only page at `/patients/:patientId`, alongside the directory at `/patients`, loaded from the single-patient endpoint.
 
-Add a single-patient endpoint with invalid-ID and not-found responses. Support direct links, refreshes, loading and retryable error states, and navigation back to the directory. Verify both routes and update the limitations document.
+- Show the full name as the page heading and name the browser tab after the patient. Move focus to the heading when the patient loads.
+- Show a Details section with the status, the date of birth with the patient's age in whole years, the address on separate lines (leaving out an empty second line, with the country code as stored), and the date and time the patient was added. Calculate age from the viewer's local date; a 29 February birthday falls on 1 March in other years.
+- Wrap long names and addresses instead of shortening them.
+- Provide loading, retryable error, and not-found states. Show not-found for both unknown and invalid patient IDs.
+- Support direct links and refreshes, and link back to the directory with **All patients**.
+
+Verify the page's states and fields, and that both routes work after a refresh.
 
 ### Definition of done
 

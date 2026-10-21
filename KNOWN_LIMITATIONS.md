@@ -91,12 +91,10 @@ version would add.
 
 In rough priority order, beyond lifting the limitations above:
 
-1. **Patient detail page** with a direct link for each patient (the optional
-   enhancement in PLAN.md §6).
-2. **Editing patients**, with `updated_at` and audit history.
-3. **Server-side search, filtering, sorting, and paging**, so the directory
+1. **Editing patients**, with `updated_at` and audit history.
+2. **Server-side search, filtering, sorting, and paging**, so the directory
    scales past the demonstration dataset.
-4. **Sign-in and access controls** before any real use.
-5. **Continuous integration** running tests, typecheck, lint, and build on
+3. **Sign-in and access controls** before any real use.
+4. **Continuous integration** running tests, typecheck, lint, and build on
    every pull request.
-6. **Automated accessibility checks** alongside manual screen-reader testing.
+5. **Automated accessibility checks** alongside manual screen-reader testing.
