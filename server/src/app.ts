@@ -1,3 +1,4 @@
+import path from "node:path";
 import express, { type ErrorRequestHandler, type Express } from "express";
 import type { Knex } from "knex";
 import { createPatientsRouter } from "./patients/patients.routes.js";
@@ -69,9 +70,20 @@ export function createApp(db: Knex, { builtClientPath }: AppOptions = {}): Expre
   });
 
   // The page and the API share one origin, as they do through the Vite proxy in development.
-  // The client has no routes of its own, so only real files (and index.html at /) are served.
   if (builtClientPath) {
     app.use(express.static(builtClientPath));
+
+    // A refresh or direct link to a client route such as /patients asks the server for that
+    // path, so any other page address gets index.html and React Router picks the screen.
+    // Addresses with a file extension are left to 404, so a missing script or stylesheet
+    // isn't answered with HTML. API paths never get here; the /api handler above ends them.
+    app.get("/{*clientRoute}", (request, response, next) => {
+      if (path.extname(request.path) !== "") {
+        next();
+        return;
+      }
+      response.sendFile(path.join(builtClientPath, "index.html"));
+    });
   }
 
   app.use(handleRequestBodyError);

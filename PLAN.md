@@ -27,7 +27,7 @@ Use one main page with a patient directory and an **Add patient** button.
 
 ### Patient directory
 
-Display a desktop table containing each patient’s full name, birth date, status, address, and the date they were added. Show the added date in the viewer’s timezone, without the time, and status as text with a supporting color.
+Display a desktop table containing each patient’s full name, birth date, status, address, and the date they were added. Each name links to the patient’s details page. Show the added date in the viewer’s timezone, without the time, and status as text with a supporting color.
 
 Keep rows on one line, with comma-separated address parts. Truncate long names and addresses and expose the full text on hover or keyboard focus. Avoid page-level horizontal scrolling.
 
@@ -37,7 +37,7 @@ Provide loading, retryable error, and empty states. Distinguish an empty directo
 
 Show a toolbar above the loaded, nonempty directory with:
 
-- **Name search:** Match all query words across first, middle, and last name, ignoring case, accents, and surrounding spaces.
+- **Name search:** Match all query words across first, middle, and last name, ignoring case, accents, and surrounding spaces. Apply the search when the provider presses Enter or the search button. Emptying the box clears the search immediately.
 - **Status filter:** Allow multiple selections and show counts across all patients. No selection includes every status. Provide a clear action.
 - **Sort:** Recently added by default, oldest added, last name A–Z, or last name Z–A. Name sorting compares last, first, then middle name, ignoring case and accents; ties retain API order.
 
@@ -45,7 +45,7 @@ Apply search and status filtering together, then sort and paginate the results.
 
 The pager shows a result range, Previous/Next controls, and page sizes of 25, 50, or 100, defaulting to 25. Disable navigation at page boundaries and hide the pager when no results match.
 
-Return to page 1 when search, filter, sort, or page size changes. Preserve directory settings during refetches and patient creation; clamp unavailable pages to the last page. Reloading the application resets all settings.
+Return to page 1 when search, filter, sort, or page size changes. Preserve directory settings during refetches and patient creation; clamp unavailable pages to the last page. Keep directory settings in the page address, leaving out default values, so reloading or returning to the directory restores them. Ignore unrecognized values. Settings changes replace the current history entry rather than adding one.
 
 Keep controls keyboard accessible, preserve focus after clearing filters or changing pages, scroll the table into view on page changes, and announce the updated range.
 
@@ -67,6 +67,7 @@ Open an accessible dialog with fields grouped into name, patient details, and ad
 | UI | Tailwind CSS, shadcn/ui |
 | Forms and validation | React Hook Form, Zod |
 | Server state | TanStack Query |
+| Routing | React Router |
 | Backend | Express |
 | Persistence | Knex, PostgreSQL |
 | Testing | Vitest, React Testing Library, Supertest |
@@ -81,7 +82,7 @@ shared/   Browser-safe validation schemas and shared types
 
 Define `createPatientSchema` in `shared/src/patients.schema.ts` and infer creation input types from it. Both the form and API use this schema; the server remains the validation enforcement boundary. Keep database connections, Express imports, and server configuration outside shared code.
 
-Use a plain React table. The core single-page workflow does not require a router.
+Use a plain React table. Use React Router for client routes. In production, Express serves `index.html` for non-API GET requests without a file extension, so client routes survive a refresh.
 
 During development, Vite proxies API requests to Express. For production builds, Express serves the built client and API on one port. Docker Compose runs PostgreSQL; the application runs locally.
 
@@ -132,6 +133,7 @@ Use camelCase JSON fields and snake_case database columns.
 |---|---|
 | `GET /api/health` | Check API and database connectivity; return `200` with `{ "status": "ok" }` |
 | `GET /api/patients` | Return all saved patient fields, ordered by creation time descending, then ID ascending; return an empty collection when none exist |
+| `GET /api/patients/:patientId` | Return `200` with the complete saved patient. Reject an ID that is not a UUID before querying the database |
 | `POST /api/patients` | Validate with the shared schema, persist the patient, and return `201` with the complete saved record |
 
 Use a consistent JSON error envelope containing an error code and message. Validation errors also include `fieldErrors`, keyed by JSON field name.
@@ -139,6 +141,8 @@ Use a consistent JSON error envelope containing an error code and message. Valid
 | Condition | HTTP status | Error code |
 |---|---|---|
 | Invalid patient fields | 400 | `VALIDATION_ERROR` |
+| Patient ID that is not a UUID | 400 | `INVALID_PATIENT_ID` |
+| No patient with that ID | 404 | `PATIENT_NOT_FOUND` |
 | Malformed JSON or non-object JSON body | 400 | `INVALID_JSON` |
 | Non-JSON request format | 415 | `UNSUPPORTED_MEDIA_TYPE` |
 | Request body over 100 KB | 413 | `PAYLOAD_TOO_LARGE` |
@@ -175,11 +179,18 @@ Verify complete and minimal patient records, persistence after reload, keyboard 
 
 Follow the README from a clean checkout. It must explain prerequisites, environment setup, startup and migration commands, testing and builds, assumptions, limitations, and fictional-data-only usage.
 
-### Optional enhancement
+### Optional enhancement: patient details page
 
-After the core workflow is verified and the added scope is explicitly approved, consider a read-only patient detail page at `/patients/:patientId`, linked from a directory at `/patients`.
+Approved and implemented: a read-only page at `/patients/:patientId`, alongside the directory at `/patients`, loaded from the single-patient endpoint.
 
-Add a single-patient endpoint with invalid-ID and not-found responses. Support direct links, refreshes, loading and retryable error states, and navigation back to the directory. Verify both routes and update the limitations document.
+- Show the full name as the page heading and name the browser tab after the patient. Move focus to the heading when the patient loads.
+- Show a Details section with the status, the date of birth with the patient's age in whole years, the address on separate lines (leaving out an empty second line, with the country code as stored), and the date and time the patient was added. Calculate age from the viewer's local date; a 29 February birthday falls on 1 March in other years.
+- Wrap long names and addresses instead of shortening them.
+- Provide loading, retryable error, and not-found states. Show not-found for both unknown and invalid patient IDs.
+- Support direct links and refreshes, and link back to the directory with **All patients**.
+- Returning to the directory, with Back or with **All patients** after opening the patient from it, restores the directory’s settings and scroll position.
+
+Verify the page's states and fields, opening a patient from the directory and returning to it, and that both routes work after a refresh.
 
 ### Definition of done
 

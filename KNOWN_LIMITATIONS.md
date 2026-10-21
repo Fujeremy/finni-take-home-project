@@ -35,9 +35,6 @@ version would add.
 - **Paging runs in the browser.** This suits the small demonstration dataset;
   performance with large datasets has not been verified.
   *Future:* page on the server so the browser loads one page at a time.
-- **View settings are not kept in the URL.** Search, status filter, sort,
-  page, and page size reset when the page is refreshed.
-  *Future:* store them in the URL so views can be refreshed and shared.
 
 ### Managing patient records
 
@@ -77,6 +74,10 @@ version would add.
 ### Interface
 
 - **Desktop only.** Mobile and tablet layouts are not supported or verified.
+- **Focus after Back.** Returning from a patient's details restores the
+  directory's settings and scroll position, but keyboard focus starts at the top
+  of the page.
+  *Future:* return focus to the patient's name link.
 - **Light theme only.** shadcn's dark theme colors remain in the stylesheet,
   but nothing switches to them.
   *Future:* a theme that follows the system setting, with an optional toggle.
@@ -94,12 +95,10 @@ version would add.
 
 In rough priority order, beyond lifting the limitations above:
 
-1. **Patient detail page** with a direct link for each patient (the optional
-   enhancement in PLAN.md §6).
-2. **Editing patients**, with `updated_at` and audit history.
-3. **Server-side search, filtering, sorting, and paging**, so the directory
+1. **Editing patients**, with `updated_at` and audit history.
+2. **Server-side search, filtering, sorting, and paging**, so the directory
    scales past the demonstration dataset.
-4. **Sign-in and access controls** before any real use.
-5. **Continuous integration** running tests, typecheck, lint, and build on
+3. **Sign-in and access controls** before any real use.
+4. **Continuous integration** running tests, typecheck, lint, and build on
    every pull request.
-6. **Automated accessibility checks** alongside manual screen-reader testing.
+5. **Automated accessibility checks** alongside manual screen-reader testing.

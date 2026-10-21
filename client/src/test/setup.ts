@@ -13,6 +13,9 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+// jsdom defines window.scrollTo but only reports "not implemented". React Router's
+// ScrollRestoration calls it on every page change; jsdom has no layout to scroll anyway.
+window.scrollTo = () => {};
 
 // TruncatedText watches its width with ResizeObserver. jsdom never resizes anything, so a
 // stand-in that never reports a change is enough.

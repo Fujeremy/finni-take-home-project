@@ -46,6 +46,10 @@ Open http://localhost:3001.
 - **Find patients:** search by name (ignoring letter case and accents), filter by
   one or more statuses, and sort by date added or last name.
 - **Pages:** 25, 50, or 100 patients per page, with Previous and Next.
+- **Patient details:** select a name in the directory, or open
+  `/patients/:patientId`, to see one patient's saved information, including
+  their age and the date and time they were added. Going back returns to the
+  directory as you left it.
 - **Add patient:** an accessible dialog that validates each field as you leave it,
   shows errors beside the affected fields, keeps what you entered if saving fails,
   and asks before discarding unsaved entries. Text over a field's length limit is
@@ -139,12 +143,13 @@ server/   Express API: routes and database access (src/patients),
 shared/   Validation schema and patient types used by both client and server
 ```
 
-The API has three endpoints, all under `/api`:
+The API has four endpoints, all under `/api`:
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/health` | Confirms the API is running and can reach the database |
 | `GET /api/patients` | Lists all patients, newest first |
+| `GET /api/patients/:patientId` | Returns one patient; an invalid or unknown ID returns an error |
 | `POST /api/patients` | Validates and saves a patient; returns field errors for invalid input |
 
 `GET /api/patients` returns every patient in one response. The browser does the

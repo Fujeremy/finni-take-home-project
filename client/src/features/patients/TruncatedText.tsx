@@ -1,12 +1,22 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+type TruncatedTextProps = {
+  text: string;
+  // Makes the text a link to this address. The link is always a Tab stop and carries the
+  // tooltip itself, so a shortened link doesn't also get a separate Tab stop.
+  to?: string;
+  // Navigation state passed along with the link, such as where the provider came from.
+  linkState?: object;
+};
+
 // One line of text that ends in "…" when it doesn't fit. Only text that was cut off gets a
-// tooltip with the full value and a Tab stop, so keyboard users can reach it too. Screen
-// readers always read the full text, because the "…" is only visual.
+// tooltip with the full value; plain text also gets a Tab stop then, so keyboard users can
+// reach it too. Screen readers always read the full text, because the "…" is only visual.
 // Needs a TooltipProvider above it.
-export function TruncatedText({ text }: { text: string }) {
-  const textRef = useRef<HTMLSpanElement>(null);
+export function TruncatedText({ text, to, linkState }: TruncatedTextProps) {
+  const textRef = useRef<HTMLElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 
@@ -28,18 +38,35 @@ export function TruncatedText({ text }: { text: string }) {
     return () => resizeObserver.disconnect();
   }, [text]);
 
+  const textClasses = "block truncate rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
   // The tooltip is always rendered, so the measured element never remounts; it just never
   // opens for text that fits.
   return (
     <Tooltip open={isTruncated && isTooltipOpen} onOpenChange={setIsTooltipOpen}>
       <TooltipTrigger asChild>
-        <span
-          ref={textRef}
-          tabIndex={isTruncated ? 0 : undefined}
-          className="block truncate rounded-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-        >
-          {text}
-        </span>
+        {to ? (
+          <Link
+            ref={(element) => {
+              textRef.current = element;
+            }}
+            to={to}
+            state={linkState}
+            className={`${textClasses} hover:underline`}
+          >
+            {text}
+          </Link>
+        ) : (
+          <span
+            ref={(element) => {
+              textRef.current = element;
+            }}
+            tabIndex={isTruncated ? 0 : undefined}
+            className={textClasses}
+          >
+            {text}
+          </span>
+        )}
       </TooltipTrigger>
       <TooltipContent className="wrap-anywhere">{text}</TooltipContent>
     </Tooltip>

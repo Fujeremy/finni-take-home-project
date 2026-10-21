@@ -66,6 +66,15 @@ export async function createPatient(db: Knex, patient: CreatePatientData): Promi
   return toPatient(savedRow);
 }
 
+// Returns undefined when no patient has this ID. Expects an ID already checked to be a UUID.
+export async function findPatientById(db: Knex, patientId: string): Promise<Patient | undefined> {
+  const row = await db<PatientRow>("patients").where({ id: patientId }).first();
+  if (!row) {
+    return undefined;
+  }
+  return toPatient(row);
+}
+
 export async function listPatients(db: Knex): Promise<Patient[]> {
   const rows = await db<PatientRow>("patients")
     .select("*")

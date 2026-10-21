@@ -2,7 +2,11 @@ import { createPatientSchema } from "@finni/shared";
 import { Router } from "express";
 import type { Knex } from "knex";
 import { z } from "zod";
-import { createPatient, listPatients } from "./patients.data.js";
+import { createPatient, findPatientById, listPatients } from "./patients.data.js";
+
+// Any 8-4-4-4-12 hex ID. That's a subset of what PostgreSQL accepts for a uuid column, so
+// an ID that passes can't trigger a database error.
+const patientIdSchema = z.guid();
 
 export function createPatientsRouter(db: Knex): Router {
   const router = Router();
@@ -10,6 +14,33 @@ export function createPatientsRouter(db: Knex): Router {
   router.get("/", async (_request, response) => {
     const patients = await listPatients(db);
     response.json(patients);
+  });
+
+  router.get("/:patientId", async (request, response) => {
+    // Checked before querying: PostgreSQL rejects a malformed UUID with a database error.
+    const patientIdResult = patientIdSchema.safeParse(request.params.patientId);
+    if (!patientIdResult.success) {
+      response.status(400).json({
+        error: {
+          code: "INVALID_PATIENT_ID",
+          message: "This isn't a valid patient ID.",
+        },
+      });
+      return;
+    }
+
+    const patient = await findPatientById(db, patientIdResult.data);
+    if (!patient) {
+      response.status(404).json({
+        error: {
+          code: "PATIENT_NOT_FOUND",
+          message: "This patient doesn't exist.",
+        },
+      });
+      return;
+    }
+
+    response.json(patient);
   });
 
   router.post("/", async (request, response) => {

@@ -38,6 +38,40 @@ export function formatDateOfBirth(isoDate: string): string {
   return dateOfBirthFormat.format(new Date(`${isoDate}T00:00:00Z`));
 }
 
+// Whole years from a "YYYY-MM-DD" birth date to today's date where the viewer is. A birthday
+// hasn't happened until its month and day arrive, so someone born on 29 February turns a
+// year older on 1 March in other years.
+export function calculateAgeInYears(isoDateOfBirth: string, today: Date): number {
+  const [birthYear, birthMonth, birthDay] = isoDateOfBirth.split("-").map(Number) as [number, number, number];
+  const todayMonth = today.getMonth() + 1;
+  const todayDay = today.getDate();
+
+  const hasHadBirthdayThisYear = todayMonth > birthMonth || (todayMonth === birthMonth && todayDay >= birthDay);
+  const age = today.getFullYear() - birthYear;
+  if (hasHadBirthdayThisYear) {
+    return age;
+  }
+  return age - 1;
+}
+
+export function formatAge(ageInYears: number): string {
+  if (ageInYears === 1) {
+    return "1 year";
+  }
+  return `${ageInYears} years`;
+}
+
+// The date and time a patient was added in the viewer's timezone, e.g. "Oct 1, 2026, 11:30 AM".
+// timeZone defaults to the browser's own; tests pass one explicitly.
+export function formatAddedAtWithTime(isoTimestamp: string, timeZone?: string): string {
+  const addedAtFormat = new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  });
+  return addedAtFormat.format(new Date(isoTimestamp));
+}
+
 // Shows the date a patient was added in the viewer's timezone, e.g. "Oct 19, 2026". The time
 // is left out; the stored timestamp still has it. timeZone defaults to the browser's own;
 // tests pass one explicitly.
