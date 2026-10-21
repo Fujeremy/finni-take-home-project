@@ -1,8 +1,8 @@
 import type { Patient } from "@finni/shared";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon } from "lucide-react";
-import { type ReactNode, useEffect, useRef } from "react";
-import { Link, useParams } from "react-router";
+import { type MouseEvent, type ReactNode, useEffect, useRef } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { ApiError, getPatient } from "@/lib/api";
 import {
@@ -13,6 +13,20 @@ import {
   formatPatientName,
 } from "./patientFormatting";
 import { PatientStatusBadge } from "./PatientStatusBadge";
+
+// Sent with the directory's name links. When it's present, All patients goes back in history
+// instead of opening the directory again, so the directory returns with its settings and
+// scroll position, and Back doesn't then lead to this page a second time.
+export const OPENED_FROM_DIRECTORY = { openedFromDirectory: true };
+
+function wasOpenedFromDirectory(locationState: unknown): boolean {
+  return (
+    typeof locationState === "object" &&
+    locationState !== null &&
+    "openedFromDirectory" in locationState &&
+    locationState.openedFromDirectory === true
+  );
+}
 
 // Names the browser tab while this page is open, and restores the previous title when it closes.
 function usePageTitle(title: string) {
@@ -117,6 +131,18 @@ export function PatientDetailsPage() {
     retry: false,
   });
   const retryLabel = patientQuery.isFetching ? "Retrying…" : "Retry";
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // A direct link or a new tab has no directory to go back to, so the link opens /patients.
+  // Clicks with a modifier key, such as opening the link in a new tab, keep the link's own behavior.
+  function goToAllPatients(event: MouseEvent<HTMLAnchorElement>) {
+    const isPlainClick = event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+    if (isPlainClick && wasOpenedFromDirectory(location.state)) {
+      event.preventDefault();
+      navigate(-1);
+    }
+  }
 
   let pageTitle: string;
   let pageContent: ReactNode;
@@ -147,6 +173,7 @@ export function PatientDetailsPage() {
     <main className="mx-auto max-w-6xl space-y-6 px-8 py-10">
       <Link
         to="/patients"
+        onClick={goToAllPatients}
         className="inline-flex items-center gap-2 rounded-sm font-medium outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         <ArrowLeftIcon aria-hidden="true" className="size-4" />

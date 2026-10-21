@@ -14,6 +14,7 @@ import {
   formatPatientAddress,
   formatPatientName,
 } from "./patientFormatting";
+import { OPENED_FROM_DIRECTORY } from "./PatientDetailsPage";
 import { PatientStatusBadge } from "./PatientStatusBadge";
 import { TruncatedText } from "./TruncatedText";
 
@@ -47,7 +48,11 @@ export function PatientTable({ patients }: { patients: Patient[] }) {
             {patients.map((patient) => (
               <TableRow key={patient.id}>
                 <TableCell className="font-medium">
-                  <TruncatedText text={formatPatientName(patient)} to={`/patients/${patient.id}`} />
+                  <TruncatedText
+                    text={formatPatientName(patient)}
+                    to={`/patients/${patient.id}`}
+                    linkState={OPENED_FROM_DIRECTORY}
+                  />
                 </TableCell>
                 {/* Tabular figures keep digits the same width, so dates line up down the column. */}
                 <TableCell className="tabular-nums">{formatDateOfBirth(patient.dateOfBirth)}</TableCell>

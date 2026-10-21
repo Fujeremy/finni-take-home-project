@@ -7,13 +7,15 @@ type TruncatedTextProps = {
   // Makes the text a link to this address. The link is always a Tab stop and carries the
   // tooltip itself, so a shortened link doesn't also get a separate Tab stop.
   to?: string;
+  // Navigation state passed along with the link, such as where the provider came from.
+  linkState?: object;
 };
 
 // One line of text that ends in "…" when it doesn't fit. Only text that was cut off gets a
 // tooltip with the full value; plain text also gets a Tab stop then, so keyboard users can
 // reach it too. Screen readers always read the full text, because the "…" is only visual.
 // Needs a TooltipProvider above it.
-export function TruncatedText({ text, to }: TruncatedTextProps) {
+export function TruncatedText({ text, to, linkState }: TruncatedTextProps) {
   const textRef = useRef<HTMLElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
@@ -49,6 +51,7 @@ export function TruncatedText({ text, to }: TruncatedTextProps) {
               textRef.current = element;
             }}
             to={to}
+            state={linkState}
             className={`${textClasses} hover:underline`}
           >
             {text}

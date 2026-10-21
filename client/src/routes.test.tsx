@@ -1,6 +1,6 @@
 import type { Patient } from "@finni/shared";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -106,5 +106,33 @@ describe("moving between the directory and a patient's details", () => {
 
     expect(await screen.findByRole("heading", { name: "Jordan Lee Rivera", level: 1 })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe(`/patients/${jordanRivera.id}`);
+  });
+
+  it("returns to the searched directory with Back after viewing a patient", async () => {
+    const user = userEvent.setup();
+    answerPatientRequests();
+    const router = renderAppAt("/patients?q=riv");
+    await user.click(await screen.findByRole("link", { name: "Jordan Lee Rivera" }));
+    await screen.findByRole("heading", { name: "Jordan Lee Rivera", level: 1 });
+
+    await act(() => router.navigate(-1));
+
+    expect(await screen.findByRole("searchbox", { name: "Search patients by name" })).toHaveValue("riv");
+    expect(router.state.location.search).toBe("?q=riv");
+    expect(screen.queryByRole("link", { name: "Avery Chen" })).not.toBeInTheDocument();
+  });
+
+  it("returns to the searched directory with All patients, going back in history as Back would", async () => {
+    const user = userEvent.setup();
+    answerPatientRequests();
+    const router = renderAppAt("/patients?q=riv");
+    await user.click(await screen.findByRole("link", { name: "Jordan Lee Rivera" }));
+    await screen.findByRole("heading", { name: "Jordan Lee Rivera", level: 1 });
+
+    await user.click(screen.getByRole("link", { name: "All patients" }));
+
+    expect(await screen.findByRole("searchbox", { name: "Search patients by name" })).toHaveValue("riv");
+    expect(router.state.location.search).toBe("?q=riv");
+    expect(router.state.historyAction).toBe("POP");
   });
 });
