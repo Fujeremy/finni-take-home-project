@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from "react-router";
 import { App } from "./App";
+import { PatientDetailsPage } from "./features/patients/PatientDetailsPage";
 import { NotFoundPage } from "./NotFoundPage";
 
 // Shared by the browser router in main.tsx and the in-memory router in tests, so tests
@@ -8,5 +9,6 @@ import { NotFoundPage } from "./NotFoundPage";
 export const routes: RouteObject[] = [
   { path: "/", element: <Navigate to="/patients" replace /> },
   { path: "/patients", element: <App /> },
+  { path: "/patients/:patientId", element: <PatientDetailsPage /> },
   { path: "*", element: <NotFoundPage /> },
 ];
